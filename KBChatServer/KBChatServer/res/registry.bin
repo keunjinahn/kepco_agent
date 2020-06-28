@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		{EF1F0377-271F-4CD3-A196-C7F60661EDC9} = s 'ENAudioSvr'
+		'ENAudioSvr.EXE'
+		{
+			val AppID = s {EF1F0377-271F-4CD3-A196-C7F60661EDC9}
+		}
+	}
+}
