@@ -25,6 +25,8 @@
 #define SOCK_CMD_ROOM_JOIN	30006
 #define SOCK_CMD_CHAT_MSG_ACK	30007
 #define SOCK_CMD_CHAT_MSG_RECORVERY	30008
+enum LOGTYPE { LOG_CONNECT = 0, LOG_LOGIN, LOG_LEAVE, LOG_SOCKCLOSE, LOG_CHANNELMAKE, LOG_JOIN, LOG_CHECK, LOG_PING , LOG_SEND
+};
 class KBPKT_HDR
 {
 public:
@@ -55,6 +57,111 @@ public:
 class KBPKT_DATA_OBJ
 {
 public:
+	KBPKT_DATA_OBJ()
+	{
+		mac = _T("");
+		device_no = 0;
+		sensor_state = 0;
+		leak_1_value = 0;
+		leak_2_value = 0;
+		temp_1_value = -999;
+		temp_2_value = -999;
+		temp_3_value = -999;
+		temp_4_value = -999;
+		humi_1_value = -999;
+		humi_2_value = -999;
+		humi_3_value = -999;
+		humi_4_value = -999;
+
+	};
+	void setData(CString _mac, char* _device_no, char* _sensor_state, char _leak_1_value, char _leak_2_value,
+		char* _temp_1_value, char* _temp_2_value, char* _temp_3_value, char* _temp_4_value,
+		char* _humi_1_value, char* _humi_2_value, char* _humi_3_value, char* _humi_4_value
+	)
+	{
+		mac = _mac;
+		device_no = atoi(_device_no);
+		sensor_state = atoi(_sensor_state);
+
+		CString sValue;
+		sValue.Format(_T("%c"), _leak_1_value);
+		leak_1_value = _wtoi(sValue);
+		sValue.Format(_T("%c"), _leak_2_value);
+		leak_2_value = _wtoi(sValue);
+		temp_1_value = atof(_temp_1_value);
+		temp_2_value = atof(_temp_2_value);
+		temp_3_value = atof(_temp_3_value);
+		temp_4_value = atof(_temp_4_value);
+		humi_1_value = atof(_humi_1_value);
+		humi_2_value = atof(_humi_2_value);
+		humi_3_value = atof(_humi_3_value);
+		humi_4_value = atof(_humi_4_value);
+	}
+	
+	void setDataParser(CString srcData)
+	{
+		USES_CONVERSION;
+		char strMac[13];
+
+		char strDeviceNo[3];
+		memcpy(strDeviceNo, W2A(srcData.Mid(12,1)),1);
+		strDeviceNo[2] = '\0';
+		device_no = atoi(strDeviceNo);
+
+		char strValue[3];
+		memcpy(strValue, W2A(srcData.Mid(13, 1)),1);
+		strValue[2] = '\0';
+		sensor_state = atoi(strValue);
+		memset(strValue, 3, '\0');
+
+		CString sValue;
+		sValue.Format(_T("%c"), W2A(srcData.Mid(14, 1)), 1);
+		leak_1_value = _wtoi(sValue);
+		sValue.Format(_T("%c"), W2A(srcData.Mid(15, 1)), 1);
+		leak_2_value = _wtoi(sValue);
+
+		int nOffset = 16;
+		char strValue2[6];
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		temp_1_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		temp_2_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		temp_3_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		temp_4_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		humi_1_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		humi_2_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		humi_3_value = atof(strValue2);
+		nOffset += 5;
+
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
+		strValue2[5] = '\0';
+		humi_4_value = atof(strValue2);
+	}
+
 	void setPacket(KBPKT_HDR* pHdr,KBPKT_DATA* pPkt)
 	{
 		USES_CONVERSION;
@@ -140,6 +247,32 @@ public:
 		,mac, device_no, sensor_state, leak_1_value, leak_2_value, humi_1_value, humi_2_value, humi_3_value, humi_4_value, temp_1_value, temp_2_value, temp_3_value, temp_4_value);
 		return strPacket;
 	}
+	CString cValue(float fValue)
+	{
+		CString sValue;
+		if (fValue >= 0)
+			sValue.Format(_T("+%.1f"),fValue);
+		else
+			sValue.Format(_T("%.1f"), fValue);
+		return sValue;
+	}
+
+	CString getPacket()
+	{
+		CString strPacket = _T("");
+		strPacket.Format(_T("%c%s%d%d%d%d%s%s%s%s%s%s%s%s%c") \
+			,ack, mac, device_no, sensor_state, leak_1_value, leak_2_value, cValue(temp_1_value), cValue(temp_2_value), cValue(temp_3_value), cValue(temp_4_value), cValue(humi_1_value), cValue(humi_2_value), cValue(humi_3_value), cValue(humi_4_value),etx);
+		return strPacket;
+	}
+
+	CString getData()
+	{
+		CString strPacket = _T("");
+		strPacket.Format(_T("%s%d%d%d%d%s%s%s%s%s%s%s%s") \
+			, mac, device_no, sensor_state, leak_1_value, leak_2_value, cValue(temp_1_value), cValue(temp_2_value), cValue(temp_3_value), cValue(temp_4_value), cValue(humi_1_value), cValue(humi_2_value), cValue(humi_3_value), cValue(humi_4_value));
+		return strPacket;
+	}
+
 	int device_no;
 	int sensor_state;
 	int leak_1_value;
@@ -153,13 +286,20 @@ public:
 	float humi_3_value;
 	float humi_4_value;
 	CString mac;
+	BYTE ack='1';
+	BYTE etx='1';
 };
 
 class CShopInfo
 {
 public :
+	CShopInfo()
+	{
+		m_bActive = FALSE;
+	};
 	KBPKT_DATA_OBJ m_objData;
 	CString strShopName;
+	BOOL m_bActive;
 };
 
 class KBPKT_LOGIN_RS
@@ -229,12 +369,32 @@ public:
 	CConfigInfo()
 	{
 		m_pShowList = new CPtrList();
+		data_upload_second = 1000;
+		humi_R01_error = 100;
+		humi_R01_warning = 90;
+		leak_R01_error = 1;
+		leak_R01_warning = 1;
+		temp_R01_error = 40;
+		temp_R01_warning = 40;
+		humi_R01_enable = FALSE;
+		leak_R01_enable = FALSE;
+		temp_R01_enable = FALSE;
 	};
 	CString locationname;
 	CString locationcode;
 	CStringList listShop;
 	CStringList listShopMac;
 	CPtrList* m_pShowList;
+	int data_upload_second;
+	BOOL leak_R01_enable;
+	BOOL temp_R01_enable;
+	BOOL humi_R01_enable;
+	int humi_R01_error;
+	int humi_R01_warning;
+	int leak_R01_error;
+	int leak_R01_warning;
+	int temp_R01_error;
+	int temp_R01_warning;
 };
 
 #pragma pack()

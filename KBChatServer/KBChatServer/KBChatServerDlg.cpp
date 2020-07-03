@@ -11,7 +11,12 @@
 #define new DEBUG_NEW
 #endif
 
-
+CRect g_rectListItemInfo[SHOP_INFO_COUNT];
+CRect g_rectInfoArea = CRect(20, 180, 170, 657);
+#define TIMER_ACTIVE_LAMP 1000
+#define TIMER_SENSOR_DATA_SEND 2000
+#define TIMER_OPCUA_LOAD 2001
+#define TIMER_CHECK_CONFIG 2002
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
 class CAboutDlg : public CDialogEx
@@ -54,10 +59,14 @@ CKBChatServerDlg::CKBChatServerDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME2);
 	m_fontLocation.CreateFont(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
 	m_fontShop.CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
-	m_fontSensorValue.CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
+	m_fontSensorValue.CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
+	m_fontLeftShopName.CreateFont(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
+
+	m_blushActive.CreateSolidBrush(RGB(255,255,0));
+	m_blushInActive.CreateSolidBrush(RGB(58, 58, 58));
 	m_pLogWindow = NULL;
 	m_pCurShopInfo = NULL;
-
+	m_pAPIAgentDlg = NULL;
 
 	m_rectSensor[0] = CRect(363, 213, 413, 233);
 	m_rectSensor[1] = CRect(558, 213, 603, 233);
@@ -74,6 +83,17 @@ CKBChatServerDlg::CKBChatServerDlg(CWnd* pParent /*=NULL*/)
 	m_rectSensor[12] = CRect(0, 0, 0, 0);
 	m_rectSensor[13] = CRect(0, 0, 0, 0);
 	m_rectSensor[14] = CRect(0, 0, 0, 0);
+
+	int nLeft = 23;
+	int nTop = 183;
+	int nWidth = 143;
+	int nHeight = 45;
+	for (int i = 0; i < SHOP_INFO_COUNT; i++)
+	{
+		g_rectListItemInfo[i] = CRect(nLeft, nTop, nLeft + nWidth, nTop + nHeight);
+		nTop += nHeight + 4;
+	}
+
 }
 
 void CKBChatServerDlg::DoDataExchange(CDataExchange* pDX)
@@ -88,6 +108,8 @@ BEGIN_MESSAGE_MAP(CKBChatServerDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_LBUTTONDOWN()
 	ON_MESSAGE(WM_MYCOMMAND, OnBsButtonMsg)
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BTN_LOG, &CKBChatServerDlg::OnBnClickedBtnLog)
 END_MESSAGE_MAP()
 
 
@@ -132,7 +154,9 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	InitControl();
 	MoveWindow(CRect(0,0,1283, 869));
 	CenterWindow();
-	
+	SetTimer(TIMER_ACTIVE_LAMP, 500, NULL);
+	SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
+	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
 	SetWindowText(_T("KConnectionServer"));
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -190,15 +214,21 @@ void CKBChatServerDlg::OnPaint()
 		dc.DrawText(strLocation, CRect(194,17,1200,57), DT_CENTER | DT_TOP | DT_SINGLELINE);
 		pOldFont = dc.SelectObject(&m_fontShop);
 		CString strShop;
-		strShop.Format(_T("%s"), m_ConfigInfo.listShop.GetHead());
+		strShop.Format(_T("%s"), m_pCurShopInfo->strShopName);
 		dc.DrawText(strShop, CRect(839,104, 1107, 131), DT_CENTER | DT_TOP | DT_SINGLELINE);
+		/*
+		if (m_pCurShopInfo != NULL)
+		{
+			dc.DrawText(m_pCurShopInfo->strShopName, g_rectShopTitle, DT_CENTER | DT_TOP | DT_SINGLELINE);
+		}
+		*/
+
 		CString strTitle;
-		//strTitle.Format(_T("%s"), _T("D-TRS 수집서버"));
-		strTitle.Format(_T("%s"), _T("호서대 MOT"));
+		strTitle.Format(_T("%s"), _T("D-TRS 수집서버"));
+		//strTitle.Format(_T("%s"), _T("호서대 MOT"));
 		dc.DrawText(strTitle, CRect(17, 17, 175, 44), DT_CENTER | DT_TOP | DT_SINGLELINE);
-
 		pOldFont = DrawSensorInfo(&dc);
-
+		pOldFont = DrawItemList(&dc, m_ConfigInfo.m_pShowList);
 		dc.SelectObject(pOldFont);
 
 		
@@ -276,17 +306,21 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		pShopInfo->m_objData.humi_2_value = pObj->humi_2_value;
 		pShopInfo->m_objData.humi_3_value = pObj->humi_3_value;
 		pShopInfo->m_objData.humi_4_value = pObj->humi_4_value;
+		pShopInfo->m_bActive = TRUE;
 	}
 	Invalidate(false);
 }
 
 CShopInfo* CKBChatServerDlg::GetShopInfo(CString srcMac)
 {
+	USES_CONVERSION;
 	POSITION pos = m_ConfigInfo.m_pShowList->GetHeadPosition();
 	while (pos)
 	{
 		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetNext(pos);
-		if (pShopInfo->m_objData.mac == srcMac)
+		CString destMac;
+		destMac.Format(_T("%s"), pShopInfo->m_objData.mac);
+		if (destMac == srcMac)
 			return pShopInfo;
 	}
 	return NULL;
@@ -310,6 +344,12 @@ void CKBChatServerDlg::OnDestroy()
 		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->RemoveHead();
 		delete pShopInfo;
 	}
+	if (m_pAPIAgentDlg != NULL)
+	{
+		delete m_pAPIAgentDlg;
+		m_pAPIAgentDlg = NULL;
+	}
+	
 	// TODO: Add your message handler code here
 }
 
@@ -338,10 +378,19 @@ void CKBChatServerDlg::InitControl()
 	m_btnLog.ShowWindow(SW_SHOW);
 	m_btnLog.Invalidate();
 	
+	ximg.LoadResource(FindResource(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_BMP_OPCUA), RT_BITMAP), CXIMAGE_FORMAT_BMP, AfxGetInstanceHandle());
+	m_btnOpcua.Create(CRect(1165, 825, 1266, 860), this, IDC_BTN_OPCUA, ximg, 4,CBsButton::TOGGLE_BUTTON);
+	m_btnOpcua.ShowWindow(SW_SHOW);
+	m_btnOpcua.Invalidate();
+	
 
 	m_pLogWindow = new LogWindow();
 	m_pLogWindow->Create(IDD_LOGWINDOW, this);
 	m_pLogWindow->ShowWindow(SW_HIDE);
+
+	m_pAPIAgentDlg = new CApiAgent();
+	m_pAPIAgentDlg->Create(IDD_APIAGENT_DLG, this);
+	m_pAPIAgentDlg->ShowWindow(SW_HIDE);
 	/*
 	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1));  // Icon to use
 	if (!m_TrayIcon.Create(
@@ -375,6 +424,23 @@ void CKBChatServerDlg::OnLButtonDown(UINT nFlags, CPoint point)
 		SendMessage(WM_LBUTTONUP, 0, MAKELPARAM(point.x, point.y));
 		SendMessage(WM_SYSCOMMAND, 0xf012, MAKELPARAM(pt.x, pt.y));
 	}
+
+	if (g_rectInfoArea.PtInRect(point))
+	{
+		for (int i = 0; i< SHOP_INFO_COUNT;i++)
+		{
+			if (g_rectListItemInfo[i].PtInRect(point) && i < (m_ConfigInfo.m_pShowList->GetCount()))
+			{
+				CShopInfo* pShopInfo = (CShopInfo*) m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
+
+				if (pShopInfo != NULL)
+				{
+					m_pCurShopInfo = pShopInfo;
+				}
+				Invalidate(FALSE);
+			}
+		}
+	}
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -387,6 +453,13 @@ LRESULT CKBChatServerDlg::OnBsButtonMsg(WPARAM wParam, LPARAM lParam)
 		break;
 	case IDC_BTN_LOG:
 		ShowLoginDlg();
+		break;
+	case IDC_BTN_OPCUA:
+		BOOL bCheck = m_btnOpcua.IsCheck();
+		if (bCheck == TRUE)
+			SetTimer(TIMER_OPCUA_LOAD, m_ConfigInfo.data_upload_second, NULL);
+		else
+			KillTimer(TIMER_OPCUA_LOAD);
 		break;
 	}
 
@@ -449,15 +522,97 @@ void CKBChatServerDlg::LoadConfig()
 }
 
 
+
 void CKBChatServerDlg::ShowLoginDlg()
 {
+	/*
+	if (m_pCurShopInfo)
+	{
+		CString sCmd;
+		sCmd.Format(_T("%d"), API_SENSOR_REGISTER);
+		APICALLDATA* pData = new APICALLDATA;
+		pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+		CString mac;
+		mac.Format(_T("%s"), m_pCurShopInfo->m_objData.mac);
+		pData->insert(APICALLDATA::value_type(_mac, mac));
+		CString location_code;
+		location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+		pData->insert(APICALLDATA::value_type(_location_code, location_code));
+		g_pApiAgentDlg->AddAPI(pData);
+	}
+	*/
 	if (m_pLogWindow)
 	{
 		m_pLogWindow->ShowWindow(SW_SHOW);
 	}
 }
 
+void CKBChatServerDlg::SendSensorData()
+{
 
+	CString sCmd, mac, location_code, device_no, sensor_state, leak_1_value, leak_2_value
+		, temp_1_value, temp_2_value, temp_3_value, temp_4_value, humi_1_value, humi_2_value, humi_3_value, humi_4_value;
+
+	for (int i = 0; i < m_ConfigInfo.m_pShowList->GetCount(); i++)
+	{
+		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
+		if (pShopInfo != NULL 
+			&& pShopInfo->m_objData.device_no != 0) //센서데이터에 값이 들어 있으면 보냄
+		{
+			sCmd.Format(_T("%d"), API_SENSOR_DATA);
+			APICALLDATA* pData = new APICALLDATA;
+			pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+
+			mac.Format(_T("%s"), pShopInfo->m_objData.mac);
+			pData->insert(APICALLDATA::value_type(_mac, mac));
+
+			location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+			pData->insert(APICALLDATA::value_type(_location_code, location_code));
+
+			device_no.Format(_T("%d"), pShopInfo->m_objData.device_no);
+			pData->insert(APICALLDATA::value_type(_device_no, device_no));
+
+			sensor_state.Format(_T("%d"), pShopInfo->m_objData.sensor_state);
+			pData->insert(APICALLDATA::value_type(_sensor_state, sensor_state));
+
+			leak_1_value.Format(_T("%d"), pShopInfo->m_objData.leak_1_value);
+			pData->insert(APICALLDATA::value_type(_leak_1_value, leak_1_value));
+
+			leak_2_value.Format(_T("%d"), pShopInfo->m_objData.leak_2_value);
+			pData->insert(APICALLDATA::value_type(_leak_2_value, leak_2_value));
+
+			temp_1_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_1_value);
+			pData->insert(APICALLDATA::value_type(_temp_1_value, temp_1_value));
+			temp_2_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_2_value);
+			pData->insert(APICALLDATA::value_type(_temp_2_value, temp_2_value));
+			temp_3_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_3_value);
+			pData->insert(APICALLDATA::value_type(_temp_3_value, temp_3_value));
+			temp_4_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_4_value);
+			pData->insert(APICALLDATA::value_type(_temp_4_value, temp_4_value));
+
+			humi_1_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_1_value);
+			pData->insert(APICALLDATA::value_type(_humi_1_value, humi_1_value));
+			humi_2_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_2_value);
+			pData->insert(APICALLDATA::value_type(_humi_2_value, humi_2_value));
+			humi_3_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_3_value);
+			pData->insert(APICALLDATA::value_type(_humi_3_value, humi_3_value));
+			humi_4_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_4_value);
+			pData->insert(APICALLDATA::value_type(_humi_4_value, humi_4_value));
+			g_pApiAgentDlg->AddAPI(pData);
+		}
+	}
+}
+
+void CKBChatServerDlg::SendCheckConfig()
+{
+	CString sCmd, location_code;
+	sCmd.Format(_T("%d"), API_CHECK_CONFIG);
+	APICALLDATA* pData = new APICALLDATA;
+	pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+	location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+	pData->insert(APICALLDATA::value_type(_location_code, location_code));
+	g_pApiAgentDlg->AddAPI(pData);
+}
 
 void CKBChatServerDlg::LogMessage(LOGTYPE typeLog, CString strMsg)
 {
@@ -473,9 +628,9 @@ void CKBChatServerDlg::CheckValueDC(int nValue, SENSORTYPE type, CMemDC_* pDC,CR
 	BOOL bWarring = FALSE;
 	switch (type)
 	{
-	case SENSOR_LEAK: if (nValue > 0) bWarring = TRUE; break;
-	case SENSOR_TEMP: if (nValue > 28) bWarring = TRUE; break;
-	case SENSOR_HUMI: if (nValue > 80) bWarring = TRUE; break;
+	case SENSOR_LEAK: if (g_pServerDlg->m_ConfigInfo.leak_R01_enable &&  nValue >= g_pServerDlg->m_ConfigInfo.humi_R01_warning) bWarring = TRUE; break;
+	case SENSOR_TEMP: if (g_pServerDlg->m_ConfigInfo.temp_R01_enable && nValue >= g_pServerDlg->m_ConfigInfo.temp_R01_warning) bWarring = TRUE; break;
+	case SENSOR_HUMI: if (g_pServerDlg->m_ConfigInfo.humi_R01_enable && nValue >= g_pServerDlg->m_ConfigInfo.humi_R01_warning) bWarring = TRUE; break;
 	default:
 		bWarring = FALSE;
 	}
@@ -496,6 +651,15 @@ void CKBChatServerDlg::CheckValueDC(int nValue, SENSORTYPE type, CMemDC_* pDC,CR
 	}
 }
 
+CString converValueSensor(float fValue)
+{
+	CString sValue;
+	if (fValue == -999)
+		return _T("");
+	sValue.Format(_T("%.1f"), fValue);
+	return sValue;
+}
+
 CFont* CKBChatServerDlg::DrawSensorInfo(CMemDC_ *pDC)
 {
 	CFont* pOldFont = pDC->SelectObject(&m_fontSensorValue);
@@ -513,41 +677,150 @@ CFont* CKBChatServerDlg::DrawSensorInfo(CMemDC_ *pDC)
 		pDC->DrawText(leak_2value, m_rectSensor[11], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		
 		CString temp_1_value;
-		temp_1_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.temp_1_value);
+		temp_1_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_1_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_1_value, SENSOR_TEMP, pDC, &m_rectSensor[0]);
 		pDC->DrawText(temp_1_value, m_rectSensor[0], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString temp_2_value;
-		temp_2_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.temp_2_value);
+		temp_2_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_2_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_2_value, SENSOR_TEMP, pDC, &m_rectSensor[1]);
 		pDC->DrawText(temp_2_value, m_rectSensor[1], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString temp_3_value;
-		temp_3_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.temp_3_value);
+		temp_3_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_3_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_3_value, SENSOR_TEMP, pDC, &m_rectSensor[2]);
 		pDC->DrawText(temp_3_value, m_rectSensor[2], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString temp_4_value;
-		temp_4_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.temp_4_value);
+		temp_4_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_4_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_4_value, SENSOR_TEMP, pDC, &m_rectSensor[3]);
 		pDC->DrawText(temp_4_value, m_rectSensor[3], DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 
 		CString humi_1_value;
-		humi_1_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.humi_1_value);
+		humi_1_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.humi_1_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.humi_1_value, SENSOR_HUMI, pDC, &m_rectSensor[5]);
 		pDC->DrawText(humi_1_value, m_rectSensor[5], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString humi_2_value;
-		humi_2_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.humi_2_value);
+		humi_2_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.humi_2_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.humi_2_value, SENSOR_HUMI, pDC, &m_rectSensor[6]);
 		pDC->DrawText(humi_2_value, m_rectSensor[6], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString humi_3_value;
-		humi_3_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.humi_3_value);
+		humi_3_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.humi_3_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.humi_3_value, SENSOR_HUMI, pDC, &m_rectSensor[7]);
 		pDC->DrawText(humi_3_value, m_rectSensor[7], DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString humi_4_value;
-		humi_4_value.Format(_T("%.1f"), m_pCurShopInfo->m_objData.humi_4_value);
+		humi_4_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.humi_4_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.humi_4_value, SENSOR_HUMI, pDC, &m_rectSensor[8]);
 		pDC->DrawText(humi_4_value, m_rectSensor[8], DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 
 	}
 	return pOldFont;
+}
+
+CFont* CKBChatServerDlg::DrawItemList(CDC* pDC, CPtrList* pItemList)
+{
+	CFont* pOldFont = pDC->SelectObject(&m_fontLeftShopName);
+	CBrush* oldBrush;
+	oldBrush = pDC->SelectObject(&m_blushInActive);
+	int nCur = 0;
+	for (int i = 0; i < pItemList->GetCount(); i++)
+	{
+		CShopInfo* pShopInfo = (CShopInfo*)pItemList->GetAt(pItemList->FindIndex(i));
+		if (pShopInfo != NULL)
+		{
+			pDC->FillSolidRect(CRect(g_rectListItemInfo[i].left-1, g_rectListItemInfo[i].top - 1, g_rectListItemInfo[i].right+1, g_rectListItemInfo[i].bottom+1), RGB(28, 33, 39));
+			if (m_pCurShopInfo == pShopInfo)
+				pDC->FillSolidRect(g_rectListItemInfo[i], RGB(42, 44, 65));
+			else
+				pDC->FillSolidRect(g_rectListItemInfo[i], RGB(60, 65, 85));
+			pDC->SetTextColor(RGB(255, 255, 255));
+			CRect rectDate = CRect(g_rectListItemInfo[i].left + 4, g_rectListItemInfo[i].top + 6, g_rectListItemInfo[i].right - 2, g_rectListItemInfo[i].bottom - 18);
+			pDC->DrawText(pShopInfo->strShopName, -1, rectDate, DT_CENTER | DT_WORDBREAK);
+			if (pShopInfo->m_bActive == TRUE)
+			{
+				oldBrush = pDC->SelectObject(&m_blushActive);
+				pDC->Ellipse(g_rectListItemInfo[i].left + 65, g_rectListItemInfo[i].bottom - 20, g_rectListItemInfo[i].left + 65 + 15, g_rectListItemInfo[i].bottom - 5);
+			}
+			else
+			{
+				oldBrush = pDC->SelectObject(&m_blushInActive);
+				pDC->Ellipse(g_rectListItemInfo[i].left + 65, g_rectListItemInfo[i].bottom - 20, g_rectListItemInfo[i].left + 65 + 15, g_rectListItemInfo[i].bottom - 5);
+				
+			}
+			//pDC->Ellipse(g_rectListItemInfo[i].left + 85, g_rectListItemInfo[i].bottom - 20, g_rectListItemInfo[i].left + 85 + 15, g_rectListItemInfo[i].bottom - 5);
+				
+		}
+		nCur += 1;
+	}
+	pDC->SelectObject(oldBrush);
+	return pOldFont;
+}
+
+void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (nIDEvent == TIMER_ACTIVE_LAMP)
+	{
+		for(int i=0;i<SHOP_INFO_COUNT;i++)
+			InvalidateRect(g_rectListItemInfo[i], FALSE);
+		for (int i = 0; i < m_ConfigInfo.m_pShowList->GetCount(); i++)
+		{
+			CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
+			if (pShopInfo != NULL)
+				pShopInfo->m_bActive = FALSE;
+		}
+	}
+	else if (nIDEvent == TIMER_SENSOR_DATA_SEND)
+	{
+		KillTimer(TIMER_SENSOR_DATA_SEND);
+		SendSensorData();
+		SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
+	}
+	else if (nIDEvent == TIMER_OPCUA_LOAD)
+	{
+		LoadOpcUaData();
+	}
+	else if (nIDEvent == TIMER_CHECK_CONFIG)
+	{
+		KillTimer(TIMER_CHECK_CONFIG);
+		SendCheckConfig();
+		SetTimer(TIMER_CHECK_CONFIG, 30000, NULL);
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void CKBChatServerDlg::OnBnClickedBtnLog()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+}
+
+void CKBChatServerDlg::LoadOpcUaData()
+{
+	USES_CONVERSION;
+	CString strConfig;
+	strConfig.Format(_T("%s\\opcua_c.ini"), GetProgramPathW());
+	CString strKey = _T("INFO");
+	CString strValue;
+	char sValue[1024];
+	::GetPrivateProfileString(strKey, _T("count"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+	int nShopCount = _wtoi(strValue);
+	CString sNum;
+	CString sMac;
+	CString sData;
+	for (int i = 0; i < nShopCount; i++)
+	{
+		sNum.Format(_T("sensor_%d"), i + 1);
+		::GetPrivateProfileString(strKey, sNum, _T(""), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		
+		CString strData = _T("");
+		strData.Format(_T("%s"), strValue);
+		sMac = strData.Left(12);
+		sData.Format(_T("%s"), strValue);
+		CShopInfo* pShopInfo = GetShopInfo(sMac);
+		if (pShopInfo != NULL)
+		{
+			pShopInfo->m_objData.setDataParser(sData);
+		}
+	}
+	Invalidate(FALSE);
 }

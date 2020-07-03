@@ -69,6 +69,9 @@
     <ClInclude Include="LogWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CApiAgent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KBChatServer.cpp">
@@ -95,6 +98,9 @@
     <ClCompile Include="LogWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CApiAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KBChatServer.rc">
@@ -112,6 +118,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\bmp_log.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\bmp_opcua.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

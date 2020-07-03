@@ -78,8 +78,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\project\kepco\desktop\mariadb-connector-c-3.1.8-src\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\project\kepco\desktop\lib-mariadb-10.4;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\mariadb-connector-c-3.1.8-src\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\lib-mariadb-10.4;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -122,15 +122,18 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\json;..\..\LibSrc\cximage599c_lite\CxImage;..\..\mariadb-connector-c-3.1.8-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>wWinMainCRTStartup</EntryPointSymbol>
-      <AdditionalDependencies>libmariadb.lib;mariadbclient.lib;json_vc71_libmtD.lib;CxImageD.lib;wininet.lib</AdditionalDependencies>
+      <AdditionalDependencies>json_vc71_libmtD.lib;libmariadb.lib;mariadbclient.lib;CxImageD.lib;wininet.lib</AdditionalDependencies>
       <OutputFile>..\..\bin\KCollectionServer.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\lib;..\..\lib-mariadb-10.4;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -218,6 +221,7 @@
     <ClInclude Include="..\..\mariadb-connector-c-3.1.8-src\include\mysql.h" />
     <ClInclude Include="..\..\mariadb-connector-c-3.1.8-src\include\mysqld_error.h" />
     <ClInclude Include="BsButton.h" />
+    <ClInclude Include="CApiAgent.h" />
     <ClInclude Include="ConSock.h" />
     <ClInclude Include="KBChatServer.h" />
     <ClInclude Include="KBChatServerDlg.h" />
@@ -231,6 +235,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BsButton.cpp" />
+    <ClCompile Include="CApiAgent.cpp" />
     <ClCompile Include="ConSock.cpp" />
     <ClCompile Include="KBChatServer.cpp" />
     <ClCompile Include="KBChatServerDlg.cpp" />
@@ -250,6 +255,7 @@
   <ItemGroup>
     <Image Include="res\back.bmp" />
     <Image Include="res\bmp_log.bmp" />
+    <Image Include="res\bmp_opcua.bmp" />
     <Image Include="res\bmp_profile.bmp" />
     <Image Include="res\icon.ico" />
   </ItemGroup>

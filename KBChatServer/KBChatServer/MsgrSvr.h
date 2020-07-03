@@ -23,7 +23,7 @@ typedef struct body{
 }BODY;
 
 //#define PORT_S	39432
-#define PORT_S	8080
+#define PORT_S	443
 
 #define RESOURCE_RGS 1
 #define REG_GUID _T("{F5C7F99A-64BF-47f0-A0C6-22D8C4A98BF5}")
@@ -77,6 +77,7 @@ private:
 	CStringList * Split(CString Ps_Str, TCHAR Pc_Separator, int& Ri_Length);
 	void RelayMessageToIdxs(KBPKT_HDR *pHdr,CConSock *pSock,CStringList *pList);
 	void RelayMessageToIdx(KBPKT_HDR *pHdr,CConSock *pSock,char *toIdx);
+	int GetCountChar(CString Ps_Str, TCHAR Pc_Char);
 };
 
 extern CMsgrSvr g_MsgrSvr;

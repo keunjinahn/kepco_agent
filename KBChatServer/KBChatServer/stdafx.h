@@ -37,16 +37,55 @@
 
 #include <afxcontrolbars.h>     // MFC의 리본 및 컨트롤 막대 지원
 
-
+#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS 1
 #include <afxsock.h>            // MFC 소켓 확장
 
 #include "..\..\include\KBPacketh.h"
 #include "ximage.h"
 #include "MemDC.h"
+#include "..\..\include\util.h"
+#include <afxinet.h>
+#include <iostream>
+#include <map>
+#include <string>
+#include "json.h"
+typedef std::map<CString, CString> APICALLDATA;
 
 #define N_READBUF	8192
-enum LOGTYPE{LOG_CONNECT=0,LOG_LOGIN,LOG_LEAVE,LOG_SOCKCLOSE,LOG_CHANNELMAKE,LOG_JOIN,LOG_CHECK,LOG_PING};
+
 enum SENSORTYPE{SENSOR_LEAK = 0, SENSOR_TEMP, SENSOR_HUMI};
+
+#define SHOP_INFO_COUNT 10
+
+#define KEY_CMD  _T("CMD")
+#define REQUEST_HTTPS	0
+#define API_SERVER_IP _T("localhost")
+#define API_SERVER_PORT 5000
+enum API_CMD {
+	API_SENSOR_REGISTER = 1,
+	API_SENSOR_DATA = 2,
+	API_CHECK_CONFIG=3
+};
+
+#define _mac "mac"
+#define _location_code "location_code"
+#define _device_no "device_no"
+#define _sensor_state "sensor_state"
+
+#define _leak_1_value "leak_1_value"
+#define _leak_2_value "leak_2_value"
+
+#define _temp_1_value "temp_1_value"
+#define _temp_2_value "temp_2_value"
+#define _temp_3_value "temp_3_value"
+#define _temp_4_value "temp_4_value"
+
+#define _humi_1_value "humi_1_value"
+#define _humi_2_value "humi_2_value"
+#define _humi_3_value "humi_3_value"
+#define _humi_4_value "humi_4_value"
+
+#define RETURN_SUCESS 200
 #include <afxtempl.h>
 	#define _ATL_APARTMENT_THREADED
 #include <atlbase.h>
@@ -63,6 +102,7 @@ public:
 
 extern CKBChatServerModule _Module;
 #include <atlcom.h>
+
 
 #ifdef _UNICODE
 #if defined _M_IX86

@@ -624,7 +624,7 @@ void CMsgrSvr::WriteLog(int iNum, char *pId)
 	}
 }
 
-int GetCountChar(CString Ps_Str, TCHAR Pc_Char) 
+int CMsgrSvr::GetCountChar(CString Ps_Str, TCHAR Pc_Char)
 { 
     int Li_Count = 0; 
     for(int i = 0; i < Ps_Str.GetLength(); i++)

@@ -7,6 +7,7 @@
 #include "mariadb_version.h"
 #include "BsButton.h"
 #include "LogWindow.h"
+#include "CApiAgent.h"
 // CKBChatServerDlg 대화 상자
 class CKBChatServerDlg : public CDialogEx
 {
@@ -42,14 +43,14 @@ public:
 	MYSQL_ROW m_Row;
 	void SensorDataInsert(KBPKT_DATA_OBJ* pObj);
 	CxImage m_imgBgMain;
-	CBsButton m_btnProfile,m_btnLog;
+	CBsButton m_btnProfile,m_btnLog,m_btnOpcua;
 	void InitControl();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg LRESULT OnBsButtonMsg(WPARAM wParam, LPARAM lParam);
 	CString GetProgramPathW();
 	void LoadConfig();
 	CConfigInfo m_ConfigInfo;
-	CFont m_fontLocation, m_fontShop,m_fontSensorValue;
+	CFont m_fontLocation, m_fontShop,m_fontSensorValue, m_fontLeftShopName;
 	LogWindow* m_pLogWindow;
 	void ShowLoginDlg();
 	CShopInfo* GetShopInfo(CString srcMac);
@@ -57,7 +58,14 @@ public:
 	CFont* DrawSensorInfo(CMemDC_* pDC);
 	void CheckValueDC(int nValue, SENSORTYPE type, CMemDC_* pDC, CRect* pRect);
 	CRect m_rectSensor[15];
-
+	CFont* DrawItemList(CDC* pDC, CPtrList* pItemList);
+	CBrush m_blushActive, m_blushInActive;
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CApiAgent* m_pAPIAgentDlg;
+	afx_msg void OnBnClickedBtnLog();
+	void SendSensorData();
+	void LoadOpcUaData();
+	void SendCheckConfig();
 };
 
 extern CKBChatServerDlg *g_pServerDlg;
