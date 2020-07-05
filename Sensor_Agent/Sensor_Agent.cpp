@@ -50,6 +50,11 @@ BOOL CSensorAgentApp::InitInstance()
 
 	CWinApp::InitInstance();
 
+	HANDLE hMutex = CreateMutex(NULL, TRUE, _T("KCollectionAgent"));
+	if (!hMutex || GetLastError() == ERROR_ALREADY_EXISTS)
+		return FALSE;
+
+
 	if (!AfxSocketInit())
 	{
 		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);

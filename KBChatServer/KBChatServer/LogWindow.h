@@ -25,4 +25,6 @@ public:
 	void LogMessage(LOGTYPE typeLog, CString strMsg);
 	CListBox	m_lbLogBox;
 	CString GetLogTypeStr(LOGTYPE typeLog);
+	virtual BOOL OnInitDialog();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

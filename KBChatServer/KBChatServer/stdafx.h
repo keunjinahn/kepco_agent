@@ -53,7 +53,9 @@ typedef std::map<CString, CString> APICALLDATA;
 
 #define N_READBUF	8192
 
-enum SENSORTYPE{SENSOR_LEAK = 0, SENSOR_TEMP, SENSOR_HUMI};
+enum SENSORTYPE{SENSOR_LEAK = 0, SENSOR_TEMP=1, SENSOR_HUMI=2};
+enum CHECKRESULT{CHECK_NORMAL = 0, CHECK_WARRING=1, CHECK_ERROR=2};
+enum INCIDENTTYPE{INCIDENT_THRESHOLD = 1, INCIDENT_ANNOMALY=2};
 
 #define SHOP_INFO_COUNT 10
 
@@ -61,10 +63,15 @@ enum SENSORTYPE{SENSOR_LEAK = 0, SENSOR_TEMP, SENSOR_HUMI};
 #define REQUEST_HTTPS	0
 #define API_SERVER_IP _T("localhost")
 #define API_SERVER_PORT 5000
+
+#define	WM_ICON_NOTIFY			WM_APP+10
+
 enum API_CMD {
 	API_SENSOR_REGISTER = 1,
 	API_SENSOR_DATA = 2,
-	API_CHECK_CONFIG=3
+	API_CHECK_CONFIG = 3,
+	API_INCIDENT_DATA = 4,
+	API_DOWNLOAD_FILE = 5
 };
 
 #define _mac "mac"
@@ -85,7 +92,16 @@ enum API_CMD {
 #define _humi_3_value "humi_3_value"
 #define _humi_4_value "humi_4_value"
 
+#define _sensor_value "sensor_value"
+#define _error_code "error_code"
+#define _incident_type "incident_type"
+#define _level "level"
+
 #define RETURN_SUCESS 200
+
+#define RUN_APP_NAME  _T("KCollectionServer_setup.exe")
+#define AGENT_VERSION _T("1.0.2")
+
 #include <afxtempl.h>
 	#define _ATL_APARTMENT_THREADED
 #include <atlbase.h>

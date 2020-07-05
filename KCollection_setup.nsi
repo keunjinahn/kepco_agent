@@ -30,14 +30,18 @@ InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 
 Section "전체 프로그램 설치" SEC01
   SetOutPath "$INSTDIR"
-  KillProcDLL::KillProc "KCollectionServer.exe"
-  Sleep 500
+  Sleep 1500
+  KillProcWMI::KillProc "KCollectionServer.exe"
+  KillProcWMI::KillProc "Sensor_Agent.exe"
+
   SetOutPath "$INSTDIR"
   SetOverwrite on
   File ".\bin\KCollectionServer.exe"
+  File ".\bin\Sensor_Agent.exe"
   File ".\bin\libmariadb.dll"
   File ".\bin\icon.ico"
-  File ".\bin\config.ini"
+  File ".\config.ini"
+  File ".\bin\config_agent.ini"
   File ".\bin\uninstall.ico"
   CreateDirectory $INSTDIR\info
   CreateDirectory $SYSDIR\EnTmp
@@ -51,16 +55,7 @@ Section "전체 프로그램 설치" SEC01
   CreateDirectory "$SMPROGRAMS\SecurePoint"
   CreateShortCut "$SMPROGRAMS\SecurePoint\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 
-  CreateShortCut "$DESKTOP\D-TRS Collection Server.lnk" "$INSTDIR\KCollectionServer.exe" "" "$INSTDIR\icon.ico"
-
-  ReadRegStr $0 HKLM "${PRODUCT_DIR_REGKEY}" "Check"
-StrCmp $0 "1" nobla 0
-    ;Call InstallVCRedist
-    ExecWait "$SYSDIR\EnTmp\vc_redist.x64.exe  /q:a /T:$SYSDIR\EnTmp"    
-    SetAutoClose true
-    
-nobla:
-  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "Check" "1"	
+  CreateShortCut "$DESKTOP\D-TRS Collection Server.lnk" "$INSTDIR\Sensor_Agent.exe" "" "$INSTDIR\icon.ico"
   SetAutoClose true
 SectionEnd
 
@@ -76,7 +71,7 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
-  Exec $INSTDIR\KCollectionServer.exe
+  Exec $INSTDIR\Sensor_Agent.exe
 SectionEnd
 
 Function un.onUninstSuccess
@@ -86,7 +81,8 @@ FunctionEnd
 
 
 Section Uninstall
-  KillProcDLL::KillProc "KCollectionServer.exe"
+  KillProcWMI::KillProc "KCollectionServer.exe"
+  KillProcWMI::KillProc "Sensor_Agent.exe"
   Sleep 500
   ;DeleteRegKey  HKLM "${PRODUCT_DIR_REGKEY}"
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"

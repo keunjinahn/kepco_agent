@@ -72,7 +72,37 @@ public:
 		humi_2_value = -999;
 		humi_3_value = -999;
 		humi_4_value = -999;
-
+		leak_1_value_total = 0;
+		leak_1_value_min = 0;
+		leak_1_value_max = 0;
+		leak_2_value_total = 0;
+		leak_2_value_min = 0;
+		leak_2_value_max = 0;
+		temp_1_value_total = 0;
+		temp_1_value_min = 0;
+		temp_1_value_max = 0;
+		temp_2_value_total = 0;
+		temp_2_value_min = 0;
+		temp_2_value_max = 0;
+		temp_3_value_total = 0;
+		temp_3_value_min = 0;
+		temp_3_value_max = 0;
+		temp_4_value_total = 0;
+		temp_4_value_min = 0;
+		temp_4_value_max = 0;
+		humi_1_value_total = 0;
+		humi_1_value_min = 0;
+		humi_1_value_max = 0;
+		humi_2_value_total = 0;
+		humi_2_value_min = 0;
+		humi_2_value_max = 0;
+		humi_3_value_total = 0;
+		humi_3_value_min = 0;
+		humi_3_value_max = 0;
+		humi_4_value_total = 0;
+		humi_4_value_min = 0;
+		humi_4_value_max = 0;
+		dwCount = 0;
 	};
 	void setData(CString _mac, char* _device_no, char* _sensor_state, char _leak_1_value, char _leak_2_value,
 		char* _temp_1_value, char* _temp_2_value, char* _temp_3_value, char* _temp_4_value,
@@ -101,7 +131,7 @@ public:
 	void setDataParser(CString srcData)
 	{
 		USES_CONVERSION;
-		char strMac[13];
+		mac.Format(_T("%s"), srcData.Left(12));
 
 		char strDeviceNo[3];
 		memcpy(strDeviceNo, W2A(srcData.Mid(12,1)),1);
@@ -276,15 +306,49 @@ public:
 	int device_no;
 	int sensor_state;
 	int leak_1_value;
+	int leak_1_value_total;
+	int leak_1_value_min;
+	int leak_1_value_max;
 	int leak_2_value;
+	int leak_2_value_total;
+	int leak_2_value_min;
+	int leak_2_value_max;
 	float temp_1_value;
+	float temp_1_value_total;
+	float temp_1_value_min;
+	float temp_1_value_max;
 	float temp_2_value;
+	float temp_2_value_total;
+	float temp_2_value_min;
+	float temp_2_value_max;
 	float temp_3_value;
+	float temp_3_value_total;
+	float temp_3_value_min;
+	float temp_3_value_max;
 	float temp_4_value;
+	float temp_4_value_total;
+	float temp_4_value_min;
+	float temp_4_value_max;
+
 	float humi_1_value;
+	float humi_1_value_total;
+	float humi_1_value_min;
+	float humi_1_value_max;
+
 	float humi_2_value;
+	float humi_2_value_total;
+	float humi_2_value_min;
+	float humi_2_value_max;
 	float humi_3_value;
+	float humi_3_value_total;
+	float humi_3_value_min;
+	float humi_3_value_max;
+
 	float humi_4_value;
+	float humi_4_value_total;
+	float humi_4_value_min;
+	float humi_4_value_max;
+	DWORD dwCount;
 	CString mac;
 	BYTE ack='1';
 	BYTE etx='1';
@@ -296,10 +360,14 @@ public :
 	CShopInfo()
 	{
 		m_bActive = FALSE;
+		m_bIncident = FALSE;
+		m_currentTic = ::GetTickCount();
 	};
 	KBPKT_DATA_OBJ m_objData;
 	CString strShopName;
 	BOOL m_bActive;
+	BOOL m_bIncident;
+	DWORD m_currentTic;
 };
 
 class KBPKT_LOGIN_RS
@@ -379,6 +447,11 @@ public:
 		humi_R01_enable = FALSE;
 		leak_R01_enable = FALSE;
 		temp_R01_enable = FALSE;
+		agent_ver = _T("1.0.0");
+		update_completed = 0;
+		server_ip = _T("localhost");
+		port = 5000;
+		web_port = 8080;
 	};
 	CString locationname;
 	CString locationcode;
@@ -395,6 +468,11 @@ public:
 	int leak_R01_warning;
 	int temp_R01_error;
 	int temp_R01_warning;
+	CString agent_ver;
+	int update_completed;
+	CString server_ip;
+	int port;
+	int web_port;
 };
 
 #pragma pack()

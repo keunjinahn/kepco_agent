@@ -5,7 +5,7 @@
 #pragma once
 
 #include "HostWnd.h"
-
+#include "SystemTray.h"
 // CSensorAgentDlg 대화 상자
 class CSensorAgentDlg : public CDialogEx
 {
@@ -58,4 +58,12 @@ public :
 	void LogMessage(LOGTYPE typeLog, CString strMsg);
 	CListBox	m_lbLogBox;
 	CString GetLogTypeStr(LOGTYPE typeLog);
+	void StartCollectionServer();
+	BOOL IsRunningProcess(const TCHAR* processname, TCHAR* param);
+	CSystemTray m_TrayIcon;
+	afx_msg void OnMenuTrayExit();
+	afx_msg void OnMenuTrayShow();
+	afx_msg void OnMenuTrayHide();
+	BOOL getStateProcess(CString name);
+	BOOL isSetupProgramInstall();
 };

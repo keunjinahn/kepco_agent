@@ -68,6 +68,12 @@
 #define SERVER_IP_ADDRESS	_T("localhost")
 #define PORT_S 443
 #define SOCKET_COUNT 40
+#define	WM_ICON_NOTIFY			WM_APP+10
+#define RUN_APP_NAME  _T("KCollectionServer.exe")
+#define RUN_INSTALL_NAME _T("KCollectionServer_setup.exe")
+
+#pragma warning(disable : 4996)
+
 #ifdef _UNICODE
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")

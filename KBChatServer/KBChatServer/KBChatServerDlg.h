@@ -8,6 +8,7 @@
 #include "BsButton.h"
 #include "LogWindow.h"
 #include "CApiAgent.h"
+#include "SystemTray.h"
 // CKBChatServerDlg 대화 상자
 class CKBChatServerDlg : public CDialogEx
 {
@@ -50,7 +51,7 @@ public:
 	CString GetProgramPathW();
 	void LoadConfig();
 	CConfigInfo m_ConfigInfo;
-	CFont m_fontLocation, m_fontShop,m_fontSensorValue, m_fontLeftShopName;
+	CFont m_fontLocation, m_fontShop,m_fontSensorValue, m_fontLeftShopName, m_fontSensorValue_detail;
 	LogWindow* m_pLogWindow;
 	void ShowLoginDlg();
 	CShopInfo* GetShopInfo(CString srcMac);
@@ -66,6 +67,12 @@ public:
 	void SendSensorData();
 	void LoadOpcUaData();
 	void SendCheckConfig();
+	CHECKRESULT CheckIncidentDevice(CStringList* pValueList, SENSORTYPE type, float* returValue);
+	void CheckIncident();
+	CSystemTray m_TrayIcon;
+	afx_msg void OnMenuTrayExit();
+	afx_msg void OnMenuTrayLog();
+	void UpdateDownloadCompleteToIni(int nResult);
 };
 
 extern CKBChatServerDlg *g_pServerDlg;

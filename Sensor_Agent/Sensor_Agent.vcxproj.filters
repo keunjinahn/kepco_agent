@@ -39,6 +39,9 @@
     <ClInclude Include="HostWnd.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="SystemTray.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sensor_Agent.cpp">
@@ -56,6 +59,9 @@
     <ClCompile Include="HostWnd.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="SystemTray.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SensorAgent.rc">
@@ -69,6 +75,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Sensor_Agent.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\tray.ico">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

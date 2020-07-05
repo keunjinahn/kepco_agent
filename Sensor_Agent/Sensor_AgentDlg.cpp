@@ -8,11 +8,20 @@
 #include "Sensor_AgentDlg.h"
 #include "afxdialogex.h"
 #include "HostWnd.h"
+#include <tlhelp32.h>
+#include <NTSecAPI.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 #define TIMER_SEND_INTERVAL 1000
+#define TIMER_KCOLLECTION_CHECK 1
+
+
+DWORD	g_platform_id;
+DWORD	g_version_major;
+DWORD	g_version_minor;
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -54,7 +63,7 @@ END_MESSAGE_MAP()
 CSensorAgentDlg::CSensorAgentDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SENSOR_AGENT_DIALOG, pParent)
 {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 	m_pCurShopInfo = NULL;
 }
 
@@ -82,6 +91,9 @@ BEGIN_MESSAGE_MAP(CSensorAgentDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_DLL, &CSensorAgentDlg::OnBnClickedBtnDll)
 	ON_BN_CLICKED(IDC_BTN_SEND_START, &CSensorAgentDlg::OnBnClickedBtnSendStart)
 	ON_BN_CLICKED(IDC_BTN_SEND_STOP, &CSensorAgentDlg::OnBnClickedBtnSendStop)
+	ON_COMMAND(IDC_MENU_TRAY_EXIT, &CSensorAgentDlg::OnMenuTrayExit)
+	ON_COMMAND(IDC_MENU_TRAY_VIEW_SHOW, &CSensorAgentDlg::OnMenuTrayShow)
+	ON_COMMAND(IDC_MENU_TRAY_VIEW_HIDE, &CSensorAgentDlg::OnMenuTrayHide)
 END_MESSAGE_MAP()
 
 
@@ -110,6 +122,17 @@ BOOL CSensorAgentDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
+
+	OSVERSIONINFO osversioninfo;
+	osversioninfo.dwOSVersionInfoSize = sizeof(osversioninfo);
+
+	// Get the current OS version
+	if (!GetVersionEx(&osversioninfo))
+		g_platform_id = 0;
+	g_platform_id = osversioninfo.dwPlatformId;
+	g_version_major = osversioninfo.dwMajorVersion;
+	g_version_minor = osversioninfo.dwMinorVersion;
+
 
 	// 이 대화 상자의 아이콘을 설정합니다.  응용 프로그램의 주 창이 대화 상자가 아닐 경우에는
 	//  프레임워크가 이 작업을 자동으로 수행합니다.
@@ -143,6 +166,30 @@ BOOL CSensorAgentDlg::OnInitDialog()
 
 	((CButton*)GetDlgItem(IDC_RADIO_TCP))->SetCheck(TRUE);
 	((CButton*)GetDlgItem(IDC_RADIO_OPCUA))->SetCheck(FALSE);
+
+	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1));  // Icon to use
+	if (!m_TrayIcon.Create(
+		NULL,                            // Let icon deal with its own messages
+		WM_ICON_NOTIFY,                  // Icon notify message to use
+		_T(""),  // tooltip
+		hIcon,
+		IDR_MENU_SYSTEM_TRAY,                  // ID of tray icon
+		FALSE,
+		_T(""), // balloon tip
+		_T(""),               // balloon title
+		NIIF_WARNING,                    // balloon icon
+		20))                            // balloon timeout
+	{
+		return FALSE;
+	}
+	m_TrayIcon.SetMenuDefaultItem(0, TRUE);
+
+	SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
+	UINT nStyle = 0;
+	nStyle |= WS_MAXIMIZEBOX;
+	nStyle |= WS_MINIMIZEBOX;
+	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
+	MoveWindow(0, 0, 0, 0);
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -264,15 +311,24 @@ void CSensorAgentDlg::LoadConfig()
 void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (nIDEvent == TIMER_KCOLLECTION_CHECK)
+	{
+		KillTimer(TIMER_KCOLLECTION_CHECK);
 
-	if (nIDEvent == TIMER_SEND_INTERVAL)
+		if (isSetupProgramInstall())
+		{
+			return;
+		}
+		StartCollectionServer();
+		SetTimer(TIMER_KCOLLECTION_CHECK,10000,NULL);
+	}
+	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
 		SendShopData();
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
 }
-
 
 void CSensorAgentDlg::OnDestroy()
 {
@@ -493,45 +549,49 @@ void CSensorAgentDlg::OnBnClickedBtnDll()
 
 void CSensorAgentDlg::SendShopData()
 {
-	BOOL bCheck = ((CButton*)GetDlgItem(IDC_RADIO_TCP))->GetCheck();
-	if (bCheck == TRUE)
+	if (getStateProcess(RUN_APP_NAME))
 	{
-		CString sServerIp;
-		CString sPort;
-		CString strValue;
-		int nPort = 8080;
-		GetDlgItem(IDC_EDT_SERVER_IP)->GetWindowTextW(sServerIp);
-		GetDlgItem(IDC_EDT_SERVER_PORT)->GetWindowTextW(sPort);
-		nPort = _wtoi(sPort);
-		int nCount = m_listShopSendCtrl.GetItemCount();
-		for (int i = 0; i < nCount; i++)
-		{
-			CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
-			m_pHostWnd[i].SendShopData(pShopInfo, sServerIp, nPort);
-			strValue.Format(_T("%s"), pShopInfo->m_objData.getPacket());
-			LogMessage(LOG_SEND, strValue);
-		}
-	}
-	else
-	{
-		USES_CONVERSION;
-		CString strConfig;
-		strConfig.Format(_T("%s\\opcua_s.ini"), GetProgramPathW());
-		CString strKey = _T("INFO");
-		CString strValue;
-		CString strSubKey = _T("");
-		char sValue[1024];
+		BOOL bCheck = ((CButton*)GetDlgItem(IDC_RADIO_TCP))->GetCheck();
 
-		int nCount = m_listShopSendCtrl.GetItemCount();
-		strValue.Format(_T("%d"), nCount);
-		::WritePrivateProfileString(strKey, _T("count"), strValue, strConfig);
-		for (int i = 0; i < nCount; i++)
+		if (bCheck == TRUE)
 		{
-			CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
-			strSubKey.Format(_T("sensor_%d"), i + 1);
-			strValue.Format(_T("%s"), pShopInfo->m_objData.getData());
-			::WritePrivateProfileString(strKey, strSubKey, strValue, strConfig);
-			LogMessage(LOG_SEND, strValue);
+			CString sServerIp;
+			CString sPort;
+			CString strValue;
+			int nPort = 8080;
+			GetDlgItem(IDC_EDT_SERVER_IP)->GetWindowTextW(sServerIp);
+			GetDlgItem(IDC_EDT_SERVER_PORT)->GetWindowTextW(sPort);
+			nPort = _wtoi(sPort);
+			int nCount = m_listShopSendCtrl.GetItemCount();
+			for (int i = 0; i < nCount; i++)
+			{
+				CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
+				m_pHostWnd[i].SendShopData(pShopInfo, sServerIp, nPort);
+				strValue.Format(_T("%s"), pShopInfo->m_objData.getPacket());
+				LogMessage(LOG_SEND, strValue);
+			}
+		}
+		else
+		{
+			USES_CONVERSION;
+			CString strConfig;
+			strConfig.Format(_T("%s\\opcua_s.ini"), GetProgramPathW());
+			CString strKey = _T("INFO");
+			CString strValue;
+			CString strSubKey = _T("");
+			char sValue[1024];
+
+			int nCount = m_listShopSendCtrl.GetItemCount();
+			strValue.Format(_T("%d"), nCount);
+			::WritePrivateProfileString(strKey, _T("count"), strValue, strConfig);
+			for (int i = 0; i < nCount; i++)
+			{
+				CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
+				strSubKey.Format(_T("sensor_%d"), i + 1);
+				strValue.Format(_T("%s"), pShopInfo->m_objData.getData());
+				::WritePrivateProfileString(strKey, strSubKey, strValue, strConfig);
+				LogMessage(LOG_SEND, strValue);
+			}
 		}
 	}
 }
@@ -578,4 +638,466 @@ void CSensorAgentDlg::LogMessage(LOGTYPE typeLog, CString strMsg)
 	m_lbLogBox.SetCurSel(m_lbLogBox.AddString(strLogMsg));
 	m_lbLogBox.Invalidate();
 
+}
+
+void CSensorAgentDlg::StartCollectionServer()
+{
+	USES_CONVERSION;
+
+	if(!getStateProcess(RUN_APP_NAME))
+		WinExec(W2A(RUN_APP_NAME), SW_SHOW);
+}
+
+typedef NTSTATUS(NTAPI* _NtQueryInformationProcess)(
+	HANDLE ProcessHandle,
+	DWORD ProcessInformationClass,
+	PVOID ProcessInformation,
+	DWORD ProcessInformationLength,
+	PDWORD ReturnLength
+	);
+
+typedef struct _UNICODE_STRING2
+{
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR Buffer;
+} UNICODE_STRING2, * PUNICODE_STRING2;
+
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+	LONG ExitStatus;
+	PVOID PebBaseAddress;
+	ULONG_PTR AffinityMask;
+	LONG BasePriority;
+	ULONG_PTR UniqueProcessId;
+	ULONG_PTR ParentProcessId;
+} PROCESS_BASIC_INFORMATION, * PPROCESS_BASIC_INFORMATION;
+
+
+PVOID GetPebAddress(HANDLE ProcessHandle)
+{
+	_NtQueryInformationProcess NtQueryInformationProcess =
+		(_NtQueryInformationProcess)GetProcAddress(
+			GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
+	PROCESS_BASIC_INFORMATION pbi;
+
+
+	NtQueryInformationProcess(ProcessHandle, 0, &pbi, sizeof(pbi), NULL);
+
+	return pbi.PebBaseAddress;
+}
+
+BOOL CSensorAgentDlg::IsRunningProcess(const TCHAR* processname, TCHAR* param)
+{
+	USES_CONVERSION;
+	HINSTANCE      hInstLib = NULL;
+	HANDLE         hSnapShot = NULL;
+	LPDWORD        lpdwPIDs = NULL;
+	PROCESSENTRY32 procentry;
+	BOOL           bFlag;
+	DWORD          dwSize;
+	DWORD          dwSize2;
+	DWORD          dwIndex;
+	HMODULE        hMod;
+	HANDLE         hProcess;
+	TCHAR          szFileName[MAX_PATH];
+	BOOL		   bRet = FALSE;
+	DWORD		   nTerminateProcessName;
+	DWORD		   nEnumProcessName;
+	PVOID pebAddress;
+	PVOID rtlUserProcParamsAddress;
+	UNICODE_STRING commandLine;
+	WCHAR* commandLineContents;
+
+
+	// ToolHelp Function Pointers.
+	HANDLE(WINAPI * lpfCreateToolhelp32Snapshot)(DWORD, DWORD);
+	BOOL(WINAPI * lpfProcess32First)(HANDLE, LPPROCESSENTRY32);
+	BOOL(WINAPI * lpfProcess32Next)(HANDLE, LPPROCESSENTRY32);
+
+	// PSAPI Function Pointers.
+	BOOL(WINAPI * lpfEnumProcesses)(DWORD*, DWORD, DWORD*);
+	BOOL(WINAPI * lpfEnumProcessModules)(HANDLE, HMODULE*, DWORD, LPDWORD);
+	DWORD(WINAPI * lpfGetModuleBaseName)(HANDLE, HMODULE, LPTSTR, DWORD);
+
+
+
+	// IF Windows NT 4.0
+	if (g_platform_id == VER_PLATFORM_WIN32_NT && g_version_major == 4)
+	{
+		__try
+		{
+			// Get the procedure addresses explicitly. We do
+			// this so we don't have to worry about modules
+			// failing to load under OSes other than Windows NT 4.0 
+			// because references to PSAPI.DLL can't be resolved.
+			hInstLib = LoadLibraryA("psapi.DLL");
+			if (hInstLib == NULL)
+			{
+				__leave;
+			}
+
+			// Get procedure addresses.
+			lpfEnumProcesses = (BOOL(WINAPI*)(DWORD*, DWORD, DWORD*))
+				GetProcAddress(hInstLib, "EnumProcesses");
+
+			lpfEnumProcessModules = (BOOL(WINAPI*)(HANDLE, HMODULE*, DWORD, LPDWORD))
+				GetProcAddress(hInstLib, "EnumProcessModules");
+
+			lpfGetModuleBaseName = (DWORD(WINAPI*)(HANDLE, HMODULE, LPTSTR, DWORD))
+				GetProcAddress(hInstLib, "GetModuleBaseNameA");
+
+			if (lpfEnumProcesses == NULL || lpfEnumProcessModules == NULL
+				|| lpfGetModuleBaseName == NULL)
+			{
+				__leave;
+			}
+
+			// 
+			// Call the PSAPI function EnumProcesses to get all of the
+			// ProcID's currently in the system.
+			// 
+			// NOTE: In the documentation, the third parameter of
+			// EnumProcesses is named cbNeeded, which implies that you
+			// can call the function once to find out how much space to
+			// allocate for a buffer and again to fill the buffer.
+			// This is not the case. The cbNeeded parameter returns
+			// the number of PIDs returned, so if your buffer size is
+			// zero cbNeeded returns zero.
+			// 
+			// NOTE: The "HeapAlloc" loop here ensures that we
+			// actually allocate a buffer large enough for all the
+			// PIDs in the system.
+			// 
+			dwSize2 = 256 * sizeof(DWORD);
+			do
+			{
+				if (lpdwPIDs)
+				{
+					HeapFree(GetProcessHeap(), 0, lpdwPIDs);
+					dwSize2 *= 2;
+				}
+
+				lpdwPIDs = (LPDWORD)HeapAlloc(GetProcessHeap(), 0, dwSize2);
+				if (lpdwPIDs == NULL)
+				{
+					__leave;
+				}
+
+				if (!lpfEnumProcesses(lpdwPIDs, dwSize2, &dwSize))
+				{
+					__leave;
+				}
+			} while (dwSize == dwSize2);
+
+			// How many ProcID's did we get?
+			dwSize /= sizeof(DWORD);
+
+			// Loop through each ProcID.
+			for (dwIndex = 0; dwIndex < dwSize; dwIndex++)
+			{
+				szFileName[0] = 0;
+
+				// Open the process (if we can... security does not
+				// permit every process in the system to be opened).
+				hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, lpdwPIDs[dwIndex]);
+				if (hProcess != NULL)
+				{
+					// Here we call EnumProcessModules to get only the
+					// first module in the process. This will be the 
+					// EXE module for which we will retrieve the name.
+					if (lpfEnumProcessModules(hProcess, &hMod, sizeof(hMod), &dwSize2))
+					{
+						// Get the module name
+						if (!lpfGetModuleBaseName(hProcess, hMod, szFileName, sizeof(szFileName)))
+						{
+							szFileName[0] = 0;
+						}
+
+						nTerminateProcessName = _tcslen(processname);
+						nEnumProcessName = _tcslen(szFileName);
+
+						// 같은지 뒤에서부터 비교
+						while (nTerminateProcessName != 0 && nEnumProcessName != 0)
+						{
+							if (tolower(szFileName[nEnumProcessName - 1]) !=
+								tolower(processname[nTerminateProcessName - 1]))
+							{
+								break;
+							}
+							nTerminateProcessName--;
+							nEnumProcessName--;
+						}
+
+						// terminate process that has same process name
+						if (nTerminateProcessName == 0)
+						{
+							if (param != NULL)
+							{
+								pebAddress = GetPebAddress(hProcess);
+
+								/* get the address of ProcessParameters */
+								if (!ReadProcessMemory(hProcess, (PCHAR)pebAddress + 0x10,
+									&rtlUserProcParamsAddress, sizeof(PVOID), NULL))
+								{
+									printf("Could not read the address of ProcessParameters!\n");
+									continue;
+								}
+								/* read the CommandLine UNICODE_STRING structure */
+								if (!ReadProcessMemory(hProcess, (PCHAR)rtlUserProcParamsAddress + 0x40,
+									&commandLine, sizeof(commandLine), NULL))
+								{
+									printf("Could not read CommandLine!\n");
+									continue;
+								}
+								/* allocate memory to hold the command line */
+								commandLineContents = (WCHAR*)malloc(commandLine.Length);
+								/* read the command line */
+								if (!ReadProcessMemory(hProcess, commandLine.Buffer,
+									commandLineContents, commandLine.Length, NULL))
+								{
+									printf("Could not read the command line string!\n");
+									continue;
+								}
+
+								if (strcmp(W2A(commandLineContents), W2A(param)) != NULL)
+								{
+									bRet = TRUE;
+								}
+
+								free(commandLineContents);
+							}
+							else
+							{
+								bRet = TRUE;
+							}
+						}
+					}
+					CloseHandle(hProcess);
+
+					if (bRet == TRUE) return TRUE;
+				}
+			}
+		}
+		__finally
+		{
+			if (hInstLib)
+			{
+				FreeLibrary(hInstLib);
+			}
+
+			if (lpdwPIDs)
+			{
+				HeapFree(GetProcessHeap(), 0, lpdwPIDs);
+			}
+		}
+	}
+	// If any OS other than Windows NT 4.0.
+	else if (g_platform_id == VER_PLATFORM_WIN32_WINDOWS
+		|| (g_platform_id == VER_PLATFORM_WIN32_NT && g_version_major > 4))
+	{
+		__try
+		{
+			hInstLib = LoadLibrary(_T("Kernel32.DLL"));
+			if (hInstLib == NULL)
+			{
+				__leave;
+			}
+
+			// Get procedure addresses. We are linking to 
+			// these functions explicitly, because a module using
+			// this code would fail to load under Windows NT,
+			// which does not have the Toolhelp32
+			// functions in KERNEL32.DLL.
+			lpfCreateToolhelp32Snapshot = (HANDLE(WINAPI*)(DWORD, DWORD))
+				GetProcAddress(hInstLib, "CreateToolhelp32Snapshot");
+
+			lpfProcess32First = (BOOL(WINAPI*)(HANDLE, LPPROCESSENTRY32))
+				GetProcAddress(hInstLib, "Process32First");
+
+			lpfProcess32Next = (BOOL(WINAPI*)(HANDLE, LPPROCESSENTRY32))
+				GetProcAddress(hInstLib, "Process32Next");
+
+			if (lpfProcess32Next == NULL || lpfProcess32First == NULL
+				|| lpfCreateToolhelp32Snapshot == NULL)
+			{
+				__leave;
+			}
+
+			// Get a handle to a Toolhelp snapshot of all processes.
+			hSnapShot = lpfCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+			if (hSnapShot == INVALID_HANDLE_VALUE)
+			{
+				FreeLibrary(hInstLib);
+				return FALSE;
+			}
+
+			// Get the first process' information.
+			procentry.dwSize = sizeof(PROCESSENTRY32);
+			bFlag = lpfProcess32First(hSnapShot, &procentry);
+
+			// While there are processes, keep looping.
+			while (bFlag)
+			{
+				nTerminateProcessName = _tcslen(processname);
+				nEnumProcessName = _tcslen(procentry.szExeFile);
+
+				// 같은지 뒤에서부터 비교
+				while (nTerminateProcessName != 0 && nEnumProcessName != 0)
+				{
+					if (tolower(procentry.szExeFile[nEnumProcessName - 1]) !=
+						tolower(processname[nTerminateProcessName - 1]))
+					{
+						break;
+					}
+					nTerminateProcessName--;
+					nEnumProcessName--;
+				}
+
+				// terminate process
+				if (nTerminateProcessName == 0)
+				{
+					HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procentry.th32ProcessID);
+
+					if (param != NULL)
+					{
+						pebAddress = GetPebAddress(hProcess);
+
+						/* get the address of ProcessParameters */
+						if (!ReadProcessMemory(hProcess, (PCHAR)pebAddress + 0x10,
+							&rtlUserProcParamsAddress, sizeof(PVOID), NULL))
+						{
+							printf("Could not read the address of ProcessParameters!\n");
+							goto GO_NEXT;
+						}
+						/* read the CommandLine UNICODE_STRING structure */
+						if (!ReadProcessMemory(hProcess, (PCHAR)rtlUserProcParamsAddress + 0x40,
+							&commandLine, sizeof(commandLine), NULL))
+						{
+							printf("Could not read CommandLine!\n");
+							goto GO_NEXT;
+						}
+						/* allocate memory to hold the command line */
+						commandLineContents = (WCHAR*)malloc(commandLine.Length);
+						/* read the command line */
+						if (!ReadProcessMemory(hProcess, commandLine.Buffer,
+							commandLineContents, commandLine.Length, NULL))
+						{
+							printf("Could not read the command line string!\n");
+							goto GO_NEXT;
+						}
+
+						if (strcmp(W2A(commandLineContents), W2A(param)) != NULL)
+						{
+							bRet = TRUE;
+						}
+
+						free(commandLineContents);
+					}
+					else
+					{
+						bRet = TRUE;
+					}
+					CloseHandle(hProcess);
+
+					if (bRet == TRUE) return TRUE;
+				}
+
+			GO_NEXT:
+				procentry.dwSize = sizeof(PROCESSENTRY32);
+				bFlag = lpfProcess32Next(hSnapShot, &procentry);
+			}
+		}
+		__finally
+		{
+			if (hInstLib)
+			{
+				FreeLibrary(hInstLib);
+			}
+		}
+	}
+
+	return bRet;
+}
+
+BOOL CSensorAgentDlg::getStateProcess(CString name)
+{
+	// 실행중인 모든 프로세스 찾기
+	HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32 processEntry32;
+
+	if (hProcessSnap == INVALID_HANDLE_VALUE)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	processEntry32.dwSize = sizeof(PROCESSENTRY32);
+
+	if (!Process32First(hProcessSnap, &processEntry32))
+	{
+		CloseHandle(hProcessSnap);
+		exit(EXIT_FAILURE);
+	}
+
+	while (Process32Next(hProcessSnap, &processEntry32))
+	{
+		// 실행중인 프로세스 비교
+		if (name.Compare(processEntry32.szExeFile) == 0)
+		{
+			// 실행중인 프로세스가 있다면
+			return TRUE;
+		}
+	}
+	// 실행중인 프로세스 중에 찾는 프로세스가 없다면
+	return FALSE;
+}
+
+
+
+void CSensorAgentDlg::OnMenuTrayExit()
+{
+	EndDialog(IDOK);
+}
+
+void CSensorAgentDlg::OnMenuTrayShow()
+{
+	MoveWindow(CRect(0, 0, 1100, 550), TRUE);
+	ShowWindow(SW_SHOW);
+}
+
+void CSensorAgentDlg::OnMenuTrayHide()
+{
+	MoveWindow(0,0,0,0);
+	ShowWindow(SW_HIDE);
+}
+
+
+static BOOL IsFindFile(CString sFile)
+{
+	CFileFind finder;
+	BOOL bWorking = finder.FindFile(sFile);
+	return bWorking;
+}
+
+BOOL CSensorAgentDlg::isSetupProgramInstall()
+{
+	USES_CONVERSION;
+	CString strConfig;
+	strConfig.Format(_T("%s\\config.ini"), GetProgramPathW());
+	CString strKey = _T("INFO");
+	CString strValue;
+	char sValue[1024];
+	::GetPrivateProfileString(strKey, _T("update_completed"), _T("0"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+	int update_completed = _wtoi(strValue);
+	CString sFindFile;
+	sFindFile.Format(_T("%s\\%s"), GetProgramPathW(), RUN_INSTALL_NAME);
+	if (update_completed == 1 
+		&& IsFindFile(sFindFile))
+	{
+		strValue.Format(_T("%d"), 0);
+		::WritePrivateProfileString(strKey, _T("update_completed"), strValue, strConfig);
+		WinExec(W2A(RUN_INSTALL_NAME), SW_SHOW);
+		return TRUE;
+	}
+	return FALSE;
 }

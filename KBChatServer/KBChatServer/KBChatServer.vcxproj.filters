@@ -72,6 +72,9 @@
     <ClInclude Include="CApiAgent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SystemTray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KBChatServer.cpp">
@@ -99,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CApiAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemTray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
