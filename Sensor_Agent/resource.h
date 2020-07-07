@@ -42,6 +42,7 @@
 #define IDC_BTN_SEND_STOP               1026
 #define IDC_RADIO_TCP                   1027
 #define IDC_RADIO_OPCUA                 1028
+#define IDC_EDT_PROFILE                 1029
 #define IDC_MENU_TRAY_EXIT              32771
 #define ID_0_32772                      32772
 #define IDC_MENU_TRAY_VIEW              32773

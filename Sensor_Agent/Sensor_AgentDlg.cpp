@@ -10,7 +10,7 @@
 #include "HostWnd.h"
 #include <tlhelp32.h>
 #include <NTSecAPI.h>
-
+#include <math.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -58,13 +58,15 @@ END_MESSAGE_MAP()
 
 // CSensorAgentDlg 대화 상자
 
-
+CSensorAgentDlg* g_pMainDlg = NULL;
 
 CSensorAgentDlg::CSensorAgentDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SENSOR_AGENT_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 	m_pCurShopInfo = NULL;
+	m_dwFrequencyIndex = 0;
+	m_nProfile = 0;
 }
 
 void CSensorAgentDlg::DoDataExchange(CDataExchange* pDX)
@@ -102,7 +104,7 @@ END_MESSAGE_MAP()
 BOOL CSensorAgentDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
+	g_pMainDlg = this;
 	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
 
 	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
@@ -161,7 +163,8 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	SetDlgItemTextW(IDC_EDT_TIMER_VALUE, _T("1000"));
 	SetDlgItemTextW(IDC_EDT_SERVER_IP, SERVER_IP_ADDRESS);
 	SetDlgItemTextW(IDC_EDT_SERVER_PORT, strPort);
-
+	SetDlgItemTextW(IDC_EDT_PROFILE, _T("0"));
+	
 	LoadConfig();
 
 	((CButton*)GetDlgItem(IDC_RADIO_TCP))->SetCheck(TRUE);
@@ -184,12 +187,15 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	}
 	m_TrayIcon.SetMenuDefaultItem(0, TRUE);
 
-	SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
+	
 	UINT nStyle = 0;
 	nStyle |= WS_MAXIMIZEBOX;
 	nStyle |= WS_MINIMIZEBOX;
 	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
+	
 	MoveWindow(0, 0, 0, 0);
+	SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
+
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -298,7 +304,7 @@ void CSensorAgentDlg::LoadConfig()
 			if (i == 0)
 				m_pCurShopInfo = pShopInfo;
 
-			pShopInfo->m_objData.setData(pShopInfo->m_objData.mac, "01", "00", '0', '0', "30.5", "30.5", "30.5", "30.5", "50.5", "50.5", "50.5", "50.5");
+			pShopInfo->m_objData.setData(pShopInfo->m_objData.mac, "01", "00", '0', '0', "29.1", "29.1", "30.5", "30.5", "50.5", "50.5", "50.5", "50.5");
 
 			int nIndex = m_listShopCtrl.GetItemCount();
 			m_listShopCtrl.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listShopCtrl.GetItemCount(), LPSTR_TEXTCALLBACK, 0, 0, I_IMAGECALLBACK, (LPARAM)pShopInfo);
@@ -324,6 +330,8 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
+		CTime t = CTime::GetCurrentTime();
+		m_dwFrequencyIndex ++;
 		SendShopData();
 	}
 
@@ -383,6 +391,9 @@ void CSensorAgentDlg::OnBnClickedBtnApply()
 		pShopInfo->m_objData.humi_3_value = _wtof(strValue);
 		GetDlgItemTextW(IDC_EDT_HUMI_4_VALUE, strValue);
 		pShopInfo->m_objData.humi_4_value = _wtof(strValue);
+		GetDlgItemTextW(IDC_EDT_PROFILE, strValue);
+		m_nProfile = _wtoi(strValue);
+		
 		SetDlgItemTextW(IDC_EDT_SEND_PACKET, pShopInfo->m_objData.getPacket());
 	}
 	
@@ -587,7 +598,18 @@ void CSensorAgentDlg::SendShopData()
 			for (int i = 0; i < nCount; i++)
 			{
 				CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
+
+				pShopInfo->m_objData.temp_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_1_value);
+				pShopInfo->m_objData.temp_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_2_value);
+				pShopInfo->m_objData.temp_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_3_value);
+				pShopInfo->m_objData.temp_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_4_value);
+
+				pShopInfo->m_objData.humi_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_1_value);
+				pShopInfo->m_objData.humi_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_2_value);
+				pShopInfo->m_objData.humi_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_3_value);
+				pShopInfo->m_objData.humi_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_4_value);
 				strSubKey.Format(_T("sensor_%d"), i + 1);
+
 				strValue.Format(_T("%s"), pShopInfo->m_objData.getData());
 				::WritePrivateProfileString(strKey, strSubKey, strValue, strConfig);
 				LogMessage(LOG_SEND, strValue);

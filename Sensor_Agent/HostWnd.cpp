@@ -194,6 +194,36 @@ char * convertValue(float fValue)
 	return W2A(sValue);
 
 }
+
+int float2dec(float fValue)
+{
+	return (int)(fValue * 10.0);
+}
+char* f2packet(float fValue)
+{
+	USES_CONVERSION;
+	int dec = (int)(fValue * 10.0);
+	char* hex;
+	if(dec > 0)
+		hex = dec2Hex(dec);
+	else
+		hex = dec2Hex(65536-abs(dec-0));
+	char sHex[21];
+	memset(sHex, '\0', 21);
+	strncpy(sHex, hex,strlen(hex));
+	CString strValue;
+	strValue.Format(_T("0%04s"), A2W(sHex));
+	return W2A(strValue);
+}
+
+float CHostWnd::GetSendValue(float fValue)
+{
+	if (g_pMainDlg->m_nProfile == 0)
+		return fValue;
+	
+	return GetGenValue(g_pMainDlg->m_dwFrequencyIndex, (g_pMainDlg->m_nProfile * 10) + 20.0);
+}
+
 void CHostWnd::SendShopData(CShopInfo* pShopInfo,CString serverIp,int port)
 {
 	USES_CONVERSION;
@@ -204,9 +234,9 @@ void CHostWnd::SendShopData(CShopInfo* pShopInfo,CString serverIp,int port)
 
 		ZeroMemory(pbuf, iSize);
 		KBPKT_HDR* pHdr = (KBPKT_HDR*)pbuf;
-		pHdr->cmd = '5';
+		pHdr->cmd = 5;
 		memcpy(pHdr->mac, W2A(pShopInfo->m_objData.mac), 12);
-		memcpy(pHdr->size, "40", 2);
+		memcpy(pHdr->size, "47", 2);
 		KBPKT_DATA* pdata = (KBPKT_DATA*)(pbuf + sizeof(KBPKT_HDR));
 		pdata->ack = pShopInfo->m_objData.ack;
 		CString strDeviceNo;
@@ -214,16 +244,25 @@ void CHostWnd::SendShopData(CShopInfo* pShopInfo,CString serverIp,int port)
 		memcpy(pdata->device_no, W2A(strDeviceNo), 2);
 		pdata->leak_1_value = char(pShopInfo->m_objData.leak_1_value);
 		pdata->leak_2_value = char(pShopInfo->m_objData.leak_2_value);
+		pShopInfo->m_objData.temp_1_value = GetSendValue(pShopInfo->m_objData.temp_1_value);
+		pShopInfo->m_objData.temp_2_value = GetSendValue(pShopInfo->m_objData.temp_2_value);
+		pShopInfo->m_objData.temp_3_value = GetSendValue(pShopInfo->m_objData.temp_3_value);
+		pShopInfo->m_objData.temp_4_value = GetSendValue(pShopInfo->m_objData.temp_4_value);
+		memcpy(pdata->temp_1_value, f2packet(pShopInfo->m_objData.temp_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->temp_2_value, f2packet(pShopInfo->m_objData.temp_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->temp_3_value, f2packet(pShopInfo->m_objData.temp_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->temp_4_value, f2packet(pShopInfo->m_objData.temp_1_value), SENSOR_VALUE_LEN);
 
-		memcpy(pdata->temp_1_value, convertValue(pShopInfo->m_objData.temp_1_value), 4);
-		memcpy(pdata->temp_2_value, convertValue(pShopInfo->m_objData.temp_2_value), 4);
-		memcpy(pdata->temp_3_value, convertValue(pShopInfo->m_objData.temp_3_value), 4);
-		memcpy(pdata->temp_4_value, convertValue(pShopInfo->m_objData.temp_4_value), 4);
+		pShopInfo->m_objData.humi_1_value = GetSendValue(pShopInfo->m_objData.humi_1_value);
+		pShopInfo->m_objData.humi_2_value = GetSendValue(pShopInfo->m_objData.humi_2_value);
+		pShopInfo->m_objData.humi_3_value = GetSendValue(pShopInfo->m_objData.humi_3_value);
+		pShopInfo->m_objData.humi_4_value = GetSendValue(pShopInfo->m_objData.humi_4_value);
+		memcpy(pdata->humi_1_value, f2packet(pShopInfo->m_objData.humi_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->humi_2_value, f2packet(pShopInfo->m_objData.humi_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->humi_3_value, f2packet(pShopInfo->m_objData.humi_1_value), SENSOR_VALUE_LEN);
+		memcpy(pdata->humi_4_value, f2packet(pShopInfo->m_objData.humi_1_value), SENSOR_VALUE_LEN);
 
-		memcpy(pdata->humi_1_value, convertValue(pShopInfo->m_objData.humi_1_value), 4);
-		memcpy(pdata->humi_2_value, convertValue(pShopInfo->m_objData.humi_2_value), 4);
-		memcpy(pdata->humi_3_value, convertValue(pShopInfo->m_objData.humi_3_value), 4);
-		memcpy(pdata->humi_4_value, convertValue(pShopInfo->m_objData.humi_4_value), 4);
+		
 		pdata->etx = pShopInfo->m_objData.etx;
 		if (m_pSvrSock)
 		{

@@ -61,8 +61,6 @@ enum INCIDENTTYPE{INCIDENT_THRESHOLD = 1, INCIDENT_ANNOMALY=2};
 
 #define KEY_CMD  _T("CMD")
 #define REQUEST_HTTPS	0
-#define API_SERVER_IP _T("localhost")
-#define API_SERVER_PORT 5000
 
 #define	WM_ICON_NOTIFY			WM_APP+10
 
@@ -91,6 +89,7 @@ enum API_CMD {
 #define _humi_2_value "humi_2_value"
 #define _humi_3_value "humi_3_value"
 #define _humi_4_value "humi_4_value"
+#define _sensor_msg	  "sensor_msg"
 
 #define _sensor_value "sensor_value"
 #define _error_code "error_code"

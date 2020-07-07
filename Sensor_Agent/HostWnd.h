@@ -63,6 +63,7 @@ public :
 
 	DWORD m_dwFailServerConnectCount;
 	void SendShopData(CShopInfo* pShopInfo, CString serverIp, int port);
+	float GetSendValue(float fValue);
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -453,7 +453,7 @@ int CMsgrSvr::HndlPacket(CConSock *pSock)
 
 	switch (pHdr->cmd)
 	{
-	case '5':
+	case 5:
 		{
 			WriteLog("HndlPacket", SOCK_CMD_DATA, 0);
 			KBPKT_DATA *pPkt = (KBPKT_DATA*) padv;

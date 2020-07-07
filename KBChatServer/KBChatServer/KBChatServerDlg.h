@@ -73,6 +73,7 @@ public:
 	afx_msg void OnMenuTrayExit();
 	afx_msg void OnMenuTrayLog();
 	void UpdateDownloadCompleteToIni(int nResult);
+	CShopInfo* IsNotAllocShop(CString srcMac);
 };
 
 extern CKBChatServerDlg *g_pServerDlg;

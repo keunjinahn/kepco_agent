@@ -120,10 +120,19 @@ END_MESSAGE_MAP()
 
 // CKBChatServerDlg 메시지 처리기
 
+
 BOOL CKBChatServerDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	g_pServerDlg = this;
+
+	/*
+	int num = 64302;
+	char hex[20];
+	strcpy(hex, dec2Hex(num));
+	int dec = Hex2Com(hex);
+	*/
+
 	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
 
 	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
@@ -248,13 +257,13 @@ void CKBChatServerDlg::OnPaint()
 		*/
 
 		CString strTitle;
-		//strTitle.Format(_T("%s"), _T("D-TRS 수집서버"));
-		strTitle.Format(_T("%s"), _T("호서대 스마트MC"));
+		strTitle.Format(_T("%s"), _T("D-TRS 수집서버"));
+		//strTitle.Format(_T("%s"), _T("호서대 스마트MC"));
 		dc.DrawText(strTitle, CRect(17, 17, 175, 44), DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 		pOldFont = dc.SelectObject(&m_fontSensorValue_detail);
 		strTitle.Format(_T("%s"), _T("OPC UA 사용"));
-		dc.DrawText(strTitle, CRect(1169, 803, 1264, 820), DT_CENTER | DT_TOP | DT_SINGLELINE);
+		//dc.DrawText(strTitle, CRect(1169, 803, 1264, 820), DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 
 		pOldFont = DrawSensorInfo(&dc);
@@ -294,8 +303,8 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 {
 	USES_CONVERSION;
 	char* host = "127.0.0.1";
-	char* userId = "root";
-	char* passwd = "1234";
+	char* userId = "dbadmin";
+	char* passwd = "kepco12!@";
 	char* dbName = "kcollectiondb";
 	int port = 3306;
 	mysql_init(&m_Mysql);
@@ -322,83 +331,88 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 	mysql_close(&m_Mysql);
 
 	CShopInfo* pShopInfo = GetShopInfo(pObj->mac);
-	if (pShopInfo != NULL)
+
+	if (pShopInfo == NULL)
 	{
-		pShopInfo->m_objData.device_no = pObj->device_no;
-		pShopInfo->m_objData.sensor_state = pObj->sensor_state;
-		pShopInfo->m_objData.leak_1_value = pObj->leak_1_value;
-		pShopInfo->m_objData.leak_2_value = pObj->leak_2_value;
-
-		pShopInfo->m_objData.temp_1_value = pObj->temp_1_value;
-		pShopInfo->m_objData.temp_1_value_total += pObj->temp_1_value;
-		if (pObj->temp_1_value > pShopInfo->m_objData.temp_1_value_max)
-			pShopInfo->m_objData.temp_1_value_max = pObj->temp_1_value;
-		if (pShopInfo->m_objData.temp_1_value_min == 0 
-			|| pObj->temp_1_value < pShopInfo->m_objData.temp_1_value_min)
-			pShopInfo->m_objData.temp_1_value_min = pObj->temp_1_value;
-
-		pShopInfo->m_objData.temp_2_value = pObj->temp_2_value;
-		pShopInfo->m_objData.temp_2_value_total += pObj->temp_2_value;
-		if (pObj->temp_2_value > pShopInfo->m_objData.temp_2_value_max)
-			pShopInfo->m_objData.temp_2_value_max = pObj->temp_2_value;
-		if (pShopInfo->m_objData.temp_2_value_min == 0
-			|| pObj->temp_2_value < pShopInfo->m_objData.temp_2_value_min)
-			pShopInfo->m_objData.temp_2_value_min = pObj->temp_2_value;
-
-		pShopInfo->m_objData.temp_3_value = pObj->temp_3_value;
-		pShopInfo->m_objData.temp_3_value_total += pObj->temp_3_value;
-		if (pObj->temp_3_value > pShopInfo->m_objData.temp_3_value_max)
-			pShopInfo->m_objData.temp_3_value_max = pObj->temp_3_value;
-		if (pShopInfo->m_objData.temp_3_value_min == 0
-			|| pObj->temp_3_value < pShopInfo->m_objData.temp_3_value_min)
-			pShopInfo->m_objData.temp_3_value_min = pObj->temp_3_value;
-
-		pShopInfo->m_objData.temp_4_value = pObj->temp_4_value;
-		pShopInfo->m_objData.temp_4_value_total += pObj->temp_4_value;
-		if (pObj->temp_4_value > pShopInfo->m_objData.temp_4_value_max)
-			pShopInfo->m_objData.temp_4_value_max = pObj->temp_4_value;
-		if (pShopInfo->m_objData.temp_4_value_min == 0
-			|| pObj->temp_4_value < pShopInfo->m_objData.temp_4_value_min)
-			pShopInfo->m_objData.temp_4_value_min = pObj->temp_4_value;
-
-		/// <summary>
-		pShopInfo->m_objData.humi_1_value = pObj->humi_1_value;
-		pShopInfo->m_objData.humi_1_value_total += pObj->humi_1_value;
-		if (pObj->humi_1_value > pShopInfo->m_objData.humi_1_value_max)
-			pShopInfo->m_objData.humi_1_value_max = pObj->humi_1_value;
-		if (pShopInfo->m_objData.humi_1_value_min == 0
-			|| pObj->humi_1_value < pShopInfo->m_objData.humi_1_value_min)
-			pShopInfo->m_objData.humi_1_value_min = pObj->humi_1_value;
-
-		pShopInfo->m_objData.humi_2_value = pObj->humi_2_value;
-		pShopInfo->m_objData.humi_2_value_total += pObj->humi_2_value;
-		if (pObj->humi_2_value > pShopInfo->m_objData.humi_2_value_max)
-			pShopInfo->m_objData.humi_2_value_max = pObj->humi_2_value;
-		if (pShopInfo->m_objData.humi_2_value_min == 0
-			|| pObj->humi_2_value < pShopInfo->m_objData.humi_2_value_min)
-			pShopInfo->m_objData.humi_2_value_min = pObj->humi_2_value;
-
-		pShopInfo->m_objData.humi_3_value = pObj->humi_3_value;
-		pShopInfo->m_objData.humi_3_value_total += pObj->humi_3_value;
-		if (pObj->humi_3_value > pShopInfo->m_objData.humi_3_value_max)
-			pShopInfo->m_objData.humi_3_value_max = pObj->humi_3_value;
-		if (pShopInfo->m_objData.humi_3_value_min == 0
-			|| pObj->humi_3_value < pShopInfo->m_objData.humi_3_value_min)
-			pShopInfo->m_objData.humi_3_value_min = pObj->humi_3_value;
-
-		pShopInfo->m_objData.humi_4_value = pObj->humi_4_value;
-		pShopInfo->m_objData.humi_4_value_total += pObj->humi_4_value;
-		if (pObj->humi_4_value > pShopInfo->m_objData.humi_4_value_max)
-			pShopInfo->m_objData.humi_4_value_max = pObj->humi_4_value;
-		if (pShopInfo->m_objData.humi_4_value_min == 0
-			|| pObj->humi_4_value < pShopInfo->m_objData.humi_4_value_min)
-			pShopInfo->m_objData.humi_4_value_min = pObj->humi_4_value;
-
-		pShopInfo->m_bActive = TRUE;
-		pShopInfo->m_currentTic = ::GetTickCount();
-		pShopInfo->m_objData.dwCount++;
-
+		pShopInfo = new CShopInfo();
+		pShopInfo->strShopName.Format(_T("미할당"));
+		pShopInfo->m_objData.mac = pObj->mac;
+		m_ConfigInfo.m_pShowList->AddTail(pShopInfo);
 	}
+	
+	pShopInfo->m_objData.device_no = pObj->device_no;
+	pShopInfo->m_objData.sensor_state = pObj->sensor_state;
+	pShopInfo->m_objData.leak_1_value = pObj->leak_1_value;
+	pShopInfo->m_objData.leak_2_value = pObj->leak_2_value;
+
+	pShopInfo->m_objData.temp_1_value = pObj->temp_1_value;
+	pShopInfo->m_objData.temp_1_value_total += pObj->temp_1_value;
+	if (pObj->temp_1_value > pShopInfo->m_objData.temp_1_value_max)
+		pShopInfo->m_objData.temp_1_value_max = pObj->temp_1_value;
+	if (pShopInfo->m_objData.temp_1_value_min == 0 
+		|| pObj->temp_1_value < pShopInfo->m_objData.temp_1_value_min)
+		pShopInfo->m_objData.temp_1_value_min = pObj->temp_1_value;
+
+	pShopInfo->m_objData.temp_2_value = pObj->temp_2_value;
+	pShopInfo->m_objData.temp_2_value_total += pObj->temp_2_value;
+	if (pObj->temp_2_value > pShopInfo->m_objData.temp_2_value_max)
+		pShopInfo->m_objData.temp_2_value_max = pObj->temp_2_value;
+	if (pShopInfo->m_objData.temp_2_value_min == 0
+		|| pObj->temp_2_value < pShopInfo->m_objData.temp_2_value_min)
+		pShopInfo->m_objData.temp_2_value_min = pObj->temp_2_value;
+
+	pShopInfo->m_objData.temp_3_value = pObj->temp_3_value;
+	pShopInfo->m_objData.temp_3_value_total += pObj->temp_3_value;
+	if (pObj->temp_3_value > pShopInfo->m_objData.temp_3_value_max)
+		pShopInfo->m_objData.temp_3_value_max = pObj->temp_3_value;
+	if (pShopInfo->m_objData.temp_3_value_min == 0
+		|| pObj->temp_3_value < pShopInfo->m_objData.temp_3_value_min)
+		pShopInfo->m_objData.temp_3_value_min = pObj->temp_3_value;
+
+	pShopInfo->m_objData.temp_4_value = pObj->temp_4_value;
+	pShopInfo->m_objData.temp_4_value_total += pObj->temp_4_value;
+	if (pObj->temp_4_value > pShopInfo->m_objData.temp_4_value_max)
+		pShopInfo->m_objData.temp_4_value_max = pObj->temp_4_value;
+	if (pShopInfo->m_objData.temp_4_value_min == 0
+		|| pObj->temp_4_value < pShopInfo->m_objData.temp_4_value_min)
+		pShopInfo->m_objData.temp_4_value_min = pObj->temp_4_value;
+
+	/// <summary>
+	pShopInfo->m_objData.humi_1_value = pObj->humi_1_value;
+	pShopInfo->m_objData.humi_1_value_total += pObj->humi_1_value;
+	if (pObj->humi_1_value > pShopInfo->m_objData.humi_1_value_max)
+		pShopInfo->m_objData.humi_1_value_max = pObj->humi_1_value;
+	if (pShopInfo->m_objData.humi_1_value_min == 0
+		|| pObj->humi_1_value < pShopInfo->m_objData.humi_1_value_min)
+		pShopInfo->m_objData.humi_1_value_min = pObj->humi_1_value;
+
+	pShopInfo->m_objData.humi_2_value = pObj->humi_2_value;
+	pShopInfo->m_objData.humi_2_value_total += pObj->humi_2_value;
+	if (pObj->humi_2_value > pShopInfo->m_objData.humi_2_value_max)
+		pShopInfo->m_objData.humi_2_value_max = pObj->humi_2_value;
+	if (pShopInfo->m_objData.humi_2_value_min == 0
+		|| pObj->humi_2_value < pShopInfo->m_objData.humi_2_value_min)
+		pShopInfo->m_objData.humi_2_value_min = pObj->humi_2_value;
+
+	pShopInfo->m_objData.humi_3_value = pObj->humi_3_value;
+	pShopInfo->m_objData.humi_3_value_total += pObj->humi_3_value;
+	if (pObj->humi_3_value > pShopInfo->m_objData.humi_3_value_max)
+		pShopInfo->m_objData.humi_3_value_max = pObj->humi_3_value;
+	if (pShopInfo->m_objData.humi_3_value_min == 0
+		|| pObj->humi_3_value < pShopInfo->m_objData.humi_3_value_min)
+		pShopInfo->m_objData.humi_3_value_min = pObj->humi_3_value;
+
+	pShopInfo->m_objData.humi_4_value = pObj->humi_4_value;
+	pShopInfo->m_objData.humi_4_value_total += pObj->humi_4_value;
+	if (pObj->humi_4_value > pShopInfo->m_objData.humi_4_value_max)
+		pShopInfo->m_objData.humi_4_value_max = pObj->humi_4_value;
+	if (pShopInfo->m_objData.humi_4_value_min == 0
+		|| pObj->humi_4_value < pShopInfo->m_objData.humi_4_value_min)
+		pShopInfo->m_objData.humi_4_value_min = pObj->humi_4_value;
+
+	pShopInfo->m_bActive = TRUE;
+	pShopInfo->m_currentTic = ::GetTickCount();
+	pShopInfo->m_objData.dwCount++;
 
 	if (pShopInfo == m_pCurShopInfo)
 		InvalidateRect(g_rectSensorInfoArea,FALSE);
@@ -421,6 +435,20 @@ CShopInfo* CKBChatServerDlg::GetShopInfo(CString srcMac)
 	}
 	return NULL;
 }
+
+CShopInfo* CKBChatServerDlg::IsNotAllocShop(CString srcMac)
+{
+	USES_CONVERSION;
+	POSITION pos = m_ConfigInfo.m_pShowList->GetHeadPosition();
+	while (pos)
+	{
+		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetNext(pos);
+		if (pShopInfo->m_objData.mac.GetLength() < 1)
+			return pShopInfo;
+	}
+	return NULL;
+}
+
 
 void CKBChatServerDlg::OnDestroy()
 {
@@ -476,7 +504,7 @@ void CKBChatServerDlg::InitControl()
 	
 	ximg.LoadResource(FindResource(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_BMP_OPCUA), RT_BITMAP), CXIMAGE_FORMAT_BMP, AfxGetInstanceHandle());
 	m_btnOpcua.Create(CRect(1165, 825, 1266, 860), this, IDC_BTN_OPCUA, ximg, 4,CBsButton::TOGGLE_BUTTON);
-	m_btnOpcua.ShowWindow(SW_SHOW);
+	m_btnOpcua.ShowWindow(SW_HIDE);
 	m_btnOpcua.Invalidate();
 	
 
@@ -675,6 +703,7 @@ void CKBChatServerDlg::SendSensorData()
 	CString sCmd, mac, location_code, device_no, sensor_state, leak_1_value, leak_2_value
 		, temp_1_value, temp_2_value, temp_3_value, temp_4_value, humi_1_value, humi_2_value, humi_3_value, humi_4_value;
 
+	CString strMerge = _T("");
 	for (int i = 0; i < m_ConfigInfo.m_pShowList->GetCount(); i++)
 	{
 		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
@@ -683,28 +712,49 @@ void CKBChatServerDlg::SendSensorData()
 			&& pShopInfo->m_objData.device_no != 0  
 			&& dwTic < 1000 * 10) //센서데이터에 값이 들어 있으면 보냄 , 10초동안 값이 안들어오면 보내지않음
 		{
+			mac.Format(_T("%s"), pShopInfo->m_objData.mac);
+			strMerge += mac + _T(",");
+			device_no.Format(_T("%d"), pShopInfo->m_objData.device_no);
+			strMerge += device_no + _T(",");
+			leak_1_value.Format(_T("%d"), pShopInfo->m_objData.leak_1_value);
+			strMerge += leak_1_value + _T(",");
+			leak_2_value.Format(_T("%d"), pShopInfo->m_objData.leak_2_value);
+			strMerge += leak_2_value + _T(",");
+			temp_1_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_1_value);
+			strMerge += temp_1_value + _T(",");
+			temp_2_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_2_value);
+			strMerge += temp_2_value + _T(",");
+			temp_3_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_3_value);
+			strMerge += temp_3_value + _T(",");
+			temp_4_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_4_value);
+			strMerge += temp_4_value + _T(",");
+			humi_1_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_1_value);
+			strMerge += humi_1_value + _T(",");
+			humi_2_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_2_value);
+			strMerge += humi_2_value + _T(",");
+			humi_3_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_3_value);
+			strMerge += humi_3_value + _T(",");
+			humi_4_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_4_value);
+			strMerge += humi_4_value + _T(",");
+			if(i != m_ConfigInfo.m_pShowList->GetCount()-1)
+				strMerge += _T("|");
+			
+			/*
 			sCmd.Format(_T("%d"), API_SENSOR_DATA);
 			APICALLDATA* pData = new APICALLDATA;
 			pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
-
 			mac.Format(_T("%s"), pShopInfo->m_objData.mac);
 			pData->insert(APICALLDATA::value_type(_mac, mac));
-
 			location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
 			pData->insert(APICALLDATA::value_type(_location_code, location_code));
-
 			device_no.Format(_T("%d"), pShopInfo->m_objData.device_no);
 			pData->insert(APICALLDATA::value_type(_device_no, device_no));
-
 			sensor_state.Format(_T("%d"), pShopInfo->m_objData.sensor_state);
 			pData->insert(APICALLDATA::value_type(_sensor_state, sensor_state));
-
 			leak_1_value.Format(_T("%d"), pShopInfo->m_objData.leak_1_value);
 			pData->insert(APICALLDATA::value_type(_leak_1_value, leak_1_value));
-
 			leak_2_value.Format(_T("%d"), pShopInfo->m_objData.leak_2_value);
 			pData->insert(APICALLDATA::value_type(_leak_2_value, leak_2_value));
-
 			temp_1_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_1_value);
 			pData->insert(APICALLDATA::value_type(_temp_1_value, temp_1_value));
 			temp_2_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_2_value);
@@ -713,7 +763,6 @@ void CKBChatServerDlg::SendSensorData()
 			pData->insert(APICALLDATA::value_type(_temp_3_value, temp_3_value));
 			temp_4_value.Format(_T("%.1f"), pShopInfo->m_objData.temp_4_value);
 			pData->insert(APICALLDATA::value_type(_temp_4_value, temp_4_value));
-
 			humi_1_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_1_value);
 			pData->insert(APICALLDATA::value_type(_humi_1_value, humi_1_value));
 			humi_2_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_2_value);
@@ -723,7 +772,18 @@ void CKBChatServerDlg::SendSensorData()
 			humi_4_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_4_value);
 			pData->insert(APICALLDATA::value_type(_humi_4_value, humi_4_value));
 			g_pApiAgentDlg->AddAPI(pData);
+			*/
 		}
+	}
+	if (strMerge != _T(""))
+	{
+		sCmd.Format(_T("%d"), API_SENSOR_DATA);
+		APICALLDATA* pData = new APICALLDATA;
+		pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+		location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+		pData->insert(APICALLDATA::value_type(_location_code, location_code));
+		pData->insert(APICALLDATA::value_type(_sensor_msg, strMerge));
+		g_pApiAgentDlg->AddAPI(pData);
 	}
 }
 

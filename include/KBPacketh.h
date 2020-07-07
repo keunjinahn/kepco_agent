@@ -27,6 +27,11 @@
 #define SOCK_CMD_CHAT_MSG_RECORVERY	30008
 enum LOGTYPE { LOG_CONNECT = 0, LOG_LOGIN, LOG_LEAVE, LOG_SOCKCLOSE, LOG_CHANNELMAKE, LOG_JOIN, LOG_CHECK, LOG_PING , LOG_SEND
 };
+
+float Hex2float(char* hexadecimal);
+int char2Int(char c);
+float GetGenValue(float time, float amplitude);
+
 class KBPKT_HDR
 {
 public:
@@ -35,23 +40,24 @@ public:
 	char size[2];
 };
 
+#define SENSOR_VALUE_LEN 5
 class KBPKT_DATA
 {
 public:
 	BYTE ack;
 	char device_no[2];
-	char sensor_state[2];
 	char leak_1_value;
 	char leak_2_value;
-	char temp_1_value[4];
-	char humi_1_value[4];
-	char temp_2_value[4];
-	char humi_2_value[4];
-	char temp_3_value[4];
-	char humi_3_value[4];
-	char temp_4_value[4];
-	char humi_4_value[4];
+	char temp_1_value[SENSOR_VALUE_LEN];
+	char humi_1_value[SENSOR_VALUE_LEN];
+	char temp_2_value[SENSOR_VALUE_LEN];
+	char humi_2_value[SENSOR_VALUE_LEN];
+	char temp_3_value[SENSOR_VALUE_LEN];
+	char humi_3_value[SENSOR_VALUE_LEN];
+	char temp_4_value[SENSOR_VALUE_LEN];
+	char humi_4_value[SENSOR_VALUE_LEN];
 	BYTE etx;
+	BYTE end;
 };
 
 class KBPKT_DATA_OBJ
@@ -102,6 +108,16 @@ public:
 		humi_4_value_total = 0;
 		humi_4_value_min = 0;
 		humi_4_value_max = 0;
+
+		temp_1_state = 0;
+		temp_2_state = 0;
+		temp_3_state = 0;
+		temp_4_state = 0;
+		humi_1_state = 0;
+		humi_2_state = 0;
+		humi_3_state = 0;
+		humi_4_state = 0;
+
 		dwCount = 0;
 	};
 	void setData(CString _mac, char* _device_no, char* _sensor_state, char _leak_1_value, char _leak_2_value,
@@ -128,6 +144,14 @@ public:
 		humi_4_value = atof(_humi_4_value);
 	}
 	
+	float convertValue(char* sValue)
+	{
+		if (atof(sValue) > 99.9)
+			return 99.9;
+		else if (atof(sValue) < -99.9)
+			return -99.9;
+		return atof(sValue);
+	}
 	void setDataParser(CString srcData)
 	{
 		USES_CONVERSION;
@@ -152,44 +176,44 @@ public:
 
 		int nOffset = 16;
 		char strValue2[6];
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		temp_1_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_1_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		temp_2_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_2_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		temp_3_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_3_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		temp_4_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_4_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
 		humi_1_value = atof(strValue2);
-		nOffset += 5;
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		humi_2_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_2_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		humi_3_value = atof(strValue2);
-		nOffset += 5;
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_3_value = convertValue(strValue2);
+		nOffset += SENSOR_VALUE_LEN;
 
-		memcpy(strValue2, W2A(srcData.Mid(nOffset, 5)), 5);
-		strValue2[5] = '\0';
-		humi_4_value = atof(strValue2);
+		memcpy(strValue2, W2A(srcData.Mid(nOffset, SENSOR_VALUE_LEN)), SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_4_value = convertValue(strValue2);
 	}
 
 	void setPacket(KBPKT_HDR* pHdr,KBPKT_DATA* pPkt)
@@ -204,12 +228,6 @@ public:
 		strDeviceNo[2] = '\0';
 		device_no = atoi(strDeviceNo);
 
-		char strValue[3];
-		memcpy(strValue, pPkt->sensor_state, 2);
-		strValue[2] = '\0';
-		sensor_state = atoi(strValue);
-		memset(strValue, 3, '\0');
-
 		CString sValue;
 		sValue.Format(_T("%c"), pPkt->leak_1_value);
 		leak_1_value = _wtoi(sValue);
@@ -217,56 +235,50 @@ public:
 		leak_2_value = _wtoi(sValue);
 
 
-		char strValue2[5];
-		memcpy(strValue2, pPkt->humi_1_value,4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		humi_1_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		char strValue2[SENSOR_VALUE_LEN+1];
 
-		memcpy(strValue2, pPkt->humi_2_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		humi_2_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		memcpy(strValue2, pPkt->temp_1_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_1_state = char2Int(strValue2[0]);
+		temp_1_value = Hex2float(&strValue2[1]);
 
-		memcpy(strValue2, pPkt->humi_3_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		humi_3_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		memcpy(strValue2, pPkt->temp_2_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_2_state = char2Int(strValue2[0]);
+		temp_2_value = Hex2float(&strValue2[1]);
 
-		memcpy(strValue2, pPkt->humi_4_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		humi_4_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		memcpy(strValue2, pPkt->temp_3_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_3_state = char2Int(strValue2[0]);
+		temp_3_value = Hex2float(&strValue2[1]);
+
+		memcpy(strValue2, pPkt->temp_4_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		temp_4_state = char2Int(strValue2[0]);
+		temp_4_value = Hex2float(&strValue2[1]);
+
+		memcpy(strValue2, pPkt->humi_1_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_1_state = char2Int(strValue2[0]);
+		humi_1_value = Hex2float(&strValue2[1]);
 
 
-		memcpy(strValue2, pPkt->temp_1_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		temp_1_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		memcpy(strValue2, pPkt->humi_2_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_2_state = char2Int(strValue2[0]);
+		humi_2_value = Hex2float(&strValue2[1]);
 
-		memcpy(strValue2, pPkt->temp_2_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		temp_2_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
 
-		memcpy(strValue2, pPkt->temp_3_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		temp_3_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
+		memcpy(strValue2, pPkt->humi_3_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_3_state = char2Int(strValue2[0]);
+		humi_3_value = Hex2float(&strValue2[1]);
 
-		memcpy(strValue2, pPkt->temp_4_value, 4);
-		strValue2[4] = '\0';
-		sValue.Format(_T("%c%c%c.%c"), strValue2[0], strValue2[1], strValue2[2], strValue2[3]);
-		temp_4_value = _wtof(sValue);
-		memset(strValue2, 5, '\0');
 
+		memcpy(strValue2, pPkt->humi_4_value, SENSOR_VALUE_LEN);
+		strValue2[SENSOR_VALUE_LEN] = '\0';
+		humi_4_state = char2Int(strValue2[0]);
+		humi_4_value = Hex2float(&strValue2[1]);
 
 	}
 
@@ -348,10 +360,21 @@ public:
 	float humi_4_value_total;
 	float humi_4_value_min;
 	float humi_4_value_max;
+
+	int temp_1_state;
+	int temp_2_state;
+	int temp_3_state;
+	int temp_4_state;
+	int humi_1_state;
+	int humi_2_state;
+	int humi_3_state;
+	int humi_4_state;
+
+
 	DWORD dwCount;
 	CString mac;
-	BYTE ack='1';
-	BYTE etx='1';
+	BYTE ack='-';
+	BYTE etx='9';
 };
 
 class CShopInfo
@@ -474,6 +497,180 @@ public:
 	int port;
 	int web_port;
 };
+
+
+static char* dec2Hex(int decimal)
+{
+	char hexadecimal[20] = { 0, };    // 16진수로 된 문자열을 저장할 배열
+	char hexadecimal2[20] = { 0, };
+	int position = 0;
+	while (1)
+	{
+		int mod = decimal % 16;    // 16으로 나누었을 때 나머지를 구함
+		if (mod < 10) // 나머지가 10보다 작으면
+		{
+			// 숫자 0의 ASCII 코드 값 48 + 나머지
+			hexadecimal[position] = 48 + mod;
+		}
+		else    // 나머지가 10보다 크거나 같으면
+		{
+			// 나머지에서 10을 뺀 값과 영문 대문자 A의 ASCII 코드 값 65를 더함
+			hexadecimal[position] = 65 + (mod - 10);
+		}
+
+		decimal = decimal / 16;    // 16으로 나눈 몫을 저장
+
+		position++;    // 자릿수 변경
+
+		if (decimal == 0)    // 몫이 0이되면 반복을 끝냄
+			break;
+	}
+
+	int k = 0;
+	// 배열의 요소를 역순으로 출력
+	for (int i = position - 1; i >= 0; i--)
+	{
+		hexadecimal2[k++] = hexadecimal[i];
+	}
+	return  &hexadecimal2[0];
+}
+
+static int Hex2Com(char* hexadecimal)
+{
+	int decimal = 0;                  // 10진수를 저장할 변수
+	int position = 0;
+	for (int i = strlen(hexadecimal) - 1; i >= 0; i--)    // 문자열을 역순으로 반복
+	{
+		char ch = hexadecimal[i];         // 각 자릿수에 해당하는 문자를 얻음
+
+		if (ch >= 48 && ch <= 57)         // 문자가 0~9이면(ASCII 코드 48~57)
+		{
+			// 문자에서 0에 해당하는 ASCII 코드 값을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - 48) * pow(16, position);
+		}
+		else if (ch >= 65 && ch <= 70)    // 문자가 A~F이면(ASCII 코드 65~70)
+		{                                 // 대문자로 된 16진수의 처리
+			// 문자에서 (A에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (65 - 10)) * pow(16, position);
+		}
+		else if (ch >= 97 && ch <= 102)   // 문자가 a~f이면(ASCII 코드 97~102)
+		{                                 // 소문자로 된 16진수의 처리
+			// 문자에서 (a에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (97 - 10)) * pow(16, position);
+		}
+
+		position++;
+	}
+
+	return -(65536 - decimal);
+}
+
+static int Hex2dec(char* hexadecimal)
+{
+	int decimal = 0;                  // 10진수를 저장할 변수
+	int position = 0;
+	for (int i = strlen(hexadecimal) - 1; i >= 0; i--)    // 문자열을 역순으로 반복
+	{
+		char ch = hexadecimal[i];         // 각 자릿수에 해당하는 문자를 얻음
+
+		if (ch >= 48 && ch <= 57)         // 문자가 0~9이면(ASCII 코드 48~57)
+		{
+			// 문자에서 0에 해당하는 ASCII 코드 값을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - 48) * pow(16, position);
+		}
+		else if (ch >= 65 && ch <= 70)    // 문자가 A~F이면(ASCII 코드 65~70)
+		{                                 // 대문자로 된 16진수의 처리
+			// 문자에서 (A에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (65 - 10)) * pow(16, position);
+		}
+		else if (ch >= 97 && ch <= 102)   // 문자가 a~f이면(ASCII 코드 97~102)
+		{                                 // 소문자로 된 16진수의 처리
+			// 문자에서 (a에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (97 - 10)) * pow(16, position);
+		}
+
+		position++;
+	}
+
+	return decimal;
+}
+
+static float Hex2float(char* hexadecimal)
+{
+	int decimal = 0;                  // 10진수를 저장할 변수
+	int position = 0;
+	for (int i = strlen(hexadecimal) - 1; i >= 0; i--)    // 문자열을 역순으로 반복
+	{
+		char ch = hexadecimal[i];         // 각 자릿수에 해당하는 문자를 얻음
+
+		if (ch >= 48 && ch <= 57)         // 문자가 0~9이면(ASCII 코드 48~57)
+		{
+			// 문자에서 0에 해당하는 ASCII 코드 값을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - 48) * pow(16, position);
+		}
+		else if (ch >= 65 && ch <= 70)    // 문자가 A~F이면(ASCII 코드 65~70)
+		{                                 // 대문자로 된 16진수의 처리
+			// 문자에서 (A에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (65 - 10)) * pow(16, position);
+		}
+		else if (ch >= 97 && ch <= 102)   // 문자가 a~f이면(ASCII 코드 97~102)
+		{                                 // 소문자로 된 16진수의 처리
+			// 문자에서 (a에 해당하는 ASCII 코드 값 - 10)을 빼고
+			// 16에 자릿수를 거듭제곱한 값을 곱함
+			decimal += (ch - (97 - 10)) * pow(16, position);
+		}
+
+		position++;
+	}
+
+	char strValue[4];
+	memset(strValue, '\0', 4);
+	CString strFloat;
+	if (decimal < 1000)
+	{
+		if (decimal > 999)
+			decimal = 999;
+		sprintf_s(strValue, "%03d", decimal);
+		strFloat.Format(_T("%c%c.%c"), strValue[0], strValue[1], strValue[2]);
+	}
+	else
+	{
+		int _decimal = (65536 - decimal);
+		if (_decimal > 999)
+			_decimal = 999;
+		sprintf_s(strValue, "%03d", _decimal);
+		strFloat.Format(_T("-%c%c.%c"), strValue[0], strValue[1], strValue[2]);
+	}
+	return _wtof(strFloat);
+}
+static int char2Int(char c)
+{
+	return (int)c - 48;
+}
+
+
+
+static float GetGenValue(float time,float amplitude)
+{
+	float value = 0.0;
+	float frequency = 1.0;
+	float phase = 2.0;
+	float invert = 1.0;
+	float offset = 0.0;
+	float t = frequency * time + phase;
+	value = (float)sin(100.0 * 3.14195 * t);
+	float retData = (invert * amplitude * value + offset);
+	return retData;
+
+}
 
 #pragma pack()
 

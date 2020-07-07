@@ -140,6 +140,7 @@ BOOL CConSock::Recv()
 		char sSize[3];
 		strncpy(sSize, m_pHdrRs->size, 2);
 		int dwSize = atoi(sSize);
+		dwSize = 47;
 		DWORD dwTotalSize = dwSize + sizeof(KBPKT_HDR);
 		if (m_lenRs < dwTotalSize)
 		{
