@@ -15,7 +15,7 @@ import platform
 from os import walk
 import getpass
 import telnetlib
-from configparser import ConfigParser
+from ConfigParser import ConfigParser
 version = "1.0.0"
 import getpass
 import telnetlib

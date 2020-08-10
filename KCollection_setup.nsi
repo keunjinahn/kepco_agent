@@ -43,14 +43,30 @@ Section "전체 프로그램 설치" SEC01
   File ".\config.ini"
   File ".\bin\config_agent.ini"
   File ".\bin\uninstall.ico"
+  File ".\bin\event_manager.py"
+  File ".\bin\event_manager.pyc"
+  File ".\bin\python27.dll"
+  File ".\bin\python.exe"
+  File ".\bin\pythonw.exe"
+  File ".\bin\tail.exe"
+
   CreateDirectory $INSTDIR\info
   CreateDirectory $SYSDIR\EnTmp
+  CreateDirectory $INSTDIR\..\dlls
+  CreateDirectory $INSTDIR\..\lib
+
   SetOutPath "$SYSDIR\EnTmp"
   File ".\vc_redist.x64.exe"
 
   SetOutPath "$INSTDIR\info"
   File /r ".\bin\info\*"
-  
+
+  SetOutPath "$INSTDIR\..\dlls"
+  File /r ".\dlls\*"
+
+  SetOutPath "$INSTDIR\..\lib"
+  File /r ".\lib\*"  
+
   SetOverwrite on
   CreateDirectory "$SMPROGRAMS\SecurePoint"
   CreateShortCut "$SMPROGRAMS\SecurePoint\Uninstall.lnk" "$INSTDIR\uninstall.exe"
