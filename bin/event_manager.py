@@ -31,6 +31,19 @@ import ctypes
 import warnings
 warnings.filterwarnings("ignore", category=UnicodeWarning)
 
+ZUSI_COMP = b"./ZUSI:COMP\n"
+ZUSI_TBS = b"./ZUSI:TBS\n"
+ZUSI_ET = b"./ZUSI:ET\n"
+ZPAL_TSL = b"./ZPAL::TSL\n"
+ZAHO = b"./ZAHO\n"
+ZDTF_TTRX = b"./ZDTF:TTRX\n"
+
+# ZUSI_COMP = b"./ZUSI:COMP.sh\n"
+# ZUSI_TBS = b"./ZUSI:TBS.sh\n"
+# ZUSI_ET = b"./ZUSI:ET.sh\n"
+# ZPAL_TSL = b"./ZPAL::TSL.sh\n"
+# ZAHO = b"./ZAHO.sh\n"
+# ZDTF_TTRX = b"./ZDTF:TTRX.sh\n"
 
 def read_from_file(filename, section, required_props=None):
     config_parser = ConfigParser()
@@ -62,7 +75,8 @@ config = read_from_file('config.ini', 'INFO')
 print("config", config)
 SERVER_INFO = config['server_ip'].replace("\"", "")
 print("SERVER INFO : ", SERVER_INFO)
-
+SERVER_PORT = config['port'].replace("\"", "")
+print("SERVER PORT : ", SERVER_PORT)
 
 
 class EventManager(object):
@@ -83,10 +97,15 @@ class EventManager(object):
         if self.log_print_enable is True :
             print(msg)
 
+    def get_server_ip(self):
+        if SERVER_PORT == 443 :
+            return "https://" + SERVER_INFO + ":443"
+        return "http://" + SERVER_INFO + ":" + SERVER_PORT
+
     def get_server_info(self):
         # try:
         self.Log("get_server_info start ...")
-        servers_url = "http://" + SERVER_INFO + ":5000/api/v1/agent/kepco_server_info"
+        servers_url = self.get_server_ip() + "/api/v1/agent/kepco_server_info"
         self.Log("check api url : " + servers_url)
         result = requests.get(servers_url, verify=False).text
         self.kepco_server_info = json.loads(result)
@@ -114,7 +133,7 @@ class EventManager(object):
         # try:
         trs_event_info = {}
         tn = self.login_trs_server()
-        tn.write(b"./ZUSI:COMP.sh\n")
+        tn.write(ZUSI_COMP)
         tn.write(b"exit\n")
         zusi_comp_list = []
         b_start = False
@@ -142,7 +161,7 @@ class EventManager(object):
         trs_event_info["zusi_comp"] = zusi_comp_list
 
         tn = self.login_trs_server()
-        tn.write(b"./ZUSI:TBS.sh\n")
+        tn.write(ZUSI_TBS)
         tn.write(b"exit\n")
         zusi_tbs_list = []
         b_start = False
@@ -168,7 +187,7 @@ class EventManager(object):
         trs_event_info["zusi_tbs"] = zusi_tbs_list
 
         tn = self.login_trs_server()
-        tn.write(b"./ZUSI:ET.sh\n")
+        tn.write(ZUSI_ET)
         tn.write(b"exit\n")
         zusi_et_list = []
         b_start = False
@@ -194,7 +213,7 @@ class EventManager(object):
         trs_event_info["zusi_et"] = zusi_et_list
 
         tn = self.login_trs_server()
-        tn.write(b"./ZPAL::TSL.sh\n")
+        tn.write(ZPAL_TSL)
         tn.write(b"exit\n")
         zpal_tsl_list = []
         b_start = False
@@ -221,7 +240,7 @@ class EventManager(object):
         trs_event_info["zpal_tsl"] = zusi_et_list
 
         tn = self.login_trs_server()
-        tn.write(b"./ZAHO.sh\n")
+        tn.write(ZAHO)
         tn.write(b"exit\n")
         zaho_list = []
         b_start = False
@@ -260,7 +279,7 @@ class EventManager(object):
         trs_event_info["zaho"] = zaho_list
 
         tn = self.login_trs_server()
-        tn.write(b"./ZDTF:TTRX.sh\n")
+        tn.write(ZDTF_TTRX)
         tn.write(b"exit\n")
         zdtf_ttrx_list = []
         b_start = False
@@ -295,16 +314,6 @@ class EventManager(object):
     def get_tbms_event(self):
         return []
 
-    def send_kepco_event(self,kepco_event_info):
-        try:
-            self.Log("send_kepco_event ...")
-            servers_url = "http://" + SERVER_INFO + ":5000/api/v1/agent/kepco_server_info"
-            self.Log("check api url : " + servers_url)
-            result = requests.get(servers_url, verify=False).text
-            data = json.loads(result)
-            self.Log(str(data))
-        except:
-            self.Log("check_pagent_update Exception")
     def run(self):
 
         while self.is_running:
@@ -320,9 +329,9 @@ class EventManager(object):
                     "tbms_event": tbms_event_info,
 
                 }
-                # print("len : ", len(str(keop_event_info)), ", kepco_event_send : ",keop_event_info)
+                print("len : ", len(str(keop_event_info)), ", kepco_event_send : ",keop_event_info)
                 dataobj = json.dumps(keop_event_info)
-                servers_url = "http://" + SERVER_INFO + ":5000/api/v1/agent/kepco_event_send"
+                servers_url = self.get_server_ip() + "/api/v1/agent/kepco_event_send"
                 r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
                 data = json.loads(r.text)
                 self.Log(str(data))
