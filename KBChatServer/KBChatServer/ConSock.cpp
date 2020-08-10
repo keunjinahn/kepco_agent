@@ -117,7 +117,12 @@ int CConSock::Send()
 
 BOOL CConSock::Recv()
 {
+	USES_CONVERSION;
 	int iRead = recv(m_soc, m_bufRs + m_lenRs, m_cbBufRs - m_lenRs, 0);
+
+//	CString strMsg;
+	//strMsg.Format(_T("rev size : %d, msg : %s",), iRead, A2W(m_bufRs));
+	//theApp.AppLog.Write(_T("%s"), strMsg);
 
 	if (iRead == SOCKET_ERROR)
 	{

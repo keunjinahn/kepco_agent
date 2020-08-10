@@ -65,7 +65,7 @@ CSensorAgentDlg::CSensorAgentDlg(CWnd* pParent /*=nullptr*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 	m_pCurShopInfo = NULL;
-	m_dwFrequencyIndex = 0;
+	m_dwFrequencyIndex = 0.0;
 	m_nProfile = 0;
 }
 
@@ -304,7 +304,7 @@ void CSensorAgentDlg::LoadConfig()
 			if (i == 0)
 				m_pCurShopInfo = pShopInfo;
 
-			pShopInfo->m_objData.setData(pShopInfo->m_objData.mac, "01", "00", '0', '0', "29.1", "29.1", "30.5", "30.5", "50.5", "50.5", "50.5", "50.5");
+			pShopInfo->m_objData.setData(pShopInfo->m_objData.mac, "01", "00", '0', '0', "25.1", "26.1", "27.5", "28.5", "30.5", "31.5", "32.5", "33.5");
 
 			int nIndex = m_listShopCtrl.GetItemCount();
 			m_listShopCtrl.InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, m_listShopCtrl.GetItemCount(), LPSTR_TEXTCALLBACK, 0, 0, I_IMAGECALLBACK, (LPARAM)pShopInfo);
@@ -325,13 +325,15 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			return;
 		}
-		StartCollectionServer();
+#ifndef _DEBUG
+		//StartCollectionServer();
+#endif
 		SetTimer(TIMER_KCOLLECTION_CHECK,10000,NULL);
 	}
 	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
 		CTime t = CTime::GetCurrentTime();
-		m_dwFrequencyIndex ++;
+		m_dwFrequencyIndex += 0.01;
 		SendShopData();
 	}
 

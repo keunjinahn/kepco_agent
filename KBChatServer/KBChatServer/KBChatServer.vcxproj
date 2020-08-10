@@ -225,6 +225,7 @@
     <ClInclude Include="ConSock.h" />
     <ClInclude Include="KBChatServer.h" />
     <ClInclude Include="KBChatServerDlg.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="LogWindow.h" />
     <ClInclude Include="MsgrSvr.h" />
     <ClInclude Include="Resource.h" />
@@ -240,6 +241,7 @@
     <ClCompile Include="ConSock.cpp" />
     <ClCompile Include="KBChatServer.cpp" />
     <ClCompile Include="KBChatServerDlg.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="MsgrSvr.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -259,7 +261,9 @@
     <Image Include="res\bmp_log.bmp" />
     <Image Include="res\bmp_opcua.bmp" />
     <Image Include="res\bmp_profile.bmp" />
+    <Image Include="res\ico.ico" />
     <Image Include="res\icon.ico" />
+    <Image Include="res\icon2.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

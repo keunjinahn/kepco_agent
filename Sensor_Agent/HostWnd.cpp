@@ -221,7 +221,7 @@ float CHostWnd::GetSendValue(float fValue)
 	if (g_pMainDlg->m_nProfile == 0)
 		return fValue;
 	
-	return GetGenValue(g_pMainDlg->m_dwFrequencyIndex, (g_pMainDlg->m_nProfile * 10) + 20.0);
+	return GetGenValue(g_pMainDlg->m_dwFrequencyIndex, g_pMainDlg->m_nProfile);
 }
 
 void CHostWnd::SendShopData(CShopInfo* pShopInfo,CString serverIp,int port)

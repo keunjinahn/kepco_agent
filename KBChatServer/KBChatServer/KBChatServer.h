@@ -9,7 +9,7 @@
 #endif
 
 #include "resource.h"		// 주 기호입니다.
-
+#include "Log.h"
 
 // CKBChatServerApp:
 // 이 클래스의 구현에 대해서는 KBChatServer.cpp을 참조하십시오.
@@ -31,6 +31,11 @@ private:
 	BOOL m_bATLInited;
 private:
 	BOOL InitATL();
+public :
+	CString m_strAppLogFile;
+	void CreateLog();
+	CString GetProgramPathW();
+	Log AppLog;
 };
 
 extern CKBChatServerApp theApp;

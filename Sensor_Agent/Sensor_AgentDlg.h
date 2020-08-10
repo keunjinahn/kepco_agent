@@ -66,7 +66,7 @@ public :
 	afx_msg void OnMenuTrayHide();
 	BOOL getStateProcess(CString name);
 	BOOL isSetupProgramInstall();
-	DWORD m_dwFrequencyIndex;
+	float m_dwFrequencyIndex;
 	int m_nProfile;
 };
 

@@ -5,7 +5,7 @@
 !define PRODUCT_VERSION "1.1"
 !define PRODUCT_PUBLISHER "SecurePoint, Inc."
 !define PRODUCT_WEB_SITE ""
-!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\KCollectionServer.exe"
+!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\KCollectionServer1.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 

@@ -76,6 +76,8 @@ BOOL CKBChatServerApp::InitInstance()
 	// 적절한 내용으로 수정해야 합니다.
 	SetRegistryKey(_T("로컬 응용 프로그램 마법사에서 생성된 응용 프로그램"));
 
+	CreateLog();
+
 	CKBChatServerDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
@@ -210,4 +212,51 @@ BOOL CKBChatServerApp::InitATL()
 
 	return TRUE;
 
+}
+
+
+CString CKBChatServerApp::GetProgramPathW()
+{
+	USES_CONVERSION;
+	TCHAR path_program[_MAX_PATH];
+	TCHAR drive[_MAX_DRIVE];
+	TCHAR dir[_MAX_DIR];
+	TCHAR fname[_MAX_FNAME];
+	TCHAR ext[_MAX_EXT];
+
+	TCHAR strModulePath[_MAX_PATH];
+	ZeroMemory(strModulePath, _MAX_PATH);
+	::GetModuleFileNameW(::AfxGetApp()->m_hInstance, strModulePath, _MAX_PATH);
+	_wsplitpath_s(strModulePath, drive, dir, fname, ext);
+	_wmakepath_s(path_program, drive, dir, _T(""), _T(""));
+	CString strPath = _T("");
+	strPath.Format(_T("%s"), path_program);
+
+	return strPath.Mid(0, strPath.GetLength() - 1);
+}
+
+void CKBChatServerApp::CreateLog()
+{
+	CString strLogPath;
+	strLogPath.Format(_T("%s"), GetProgramPathW());
+	CreateDirectory(strLogPath, NULL);
+	CTime t = CTime::GetCurrentTime();
+	m_strAppLogFile.Format(_T("%s\\KCollection_Log_%04d%02d%02d.log"), strLogPath, t.GetYear(), t.GetMonth(), t.GetDay());
+	CFileFind finder;
+	BOOL bWorking = finder.FindFile(m_strAppLogFile);
+	if (bWorking)
+	{
+		bWorking = finder.FindNextFile();
+		CTime oldTime;
+		finder.GetCreationTime(oldTime);
+		int a = oldTime.GetDay();
+		int b = t.GetDay();
+		if (oldTime.GetDay() != t.GetDay())
+		{
+			DeleteFile(m_strAppLogFile);
+		}
+	}
+
+	finder.Close();
+	AppLog.OpenLogFile(m_strAppLogFile);
 }

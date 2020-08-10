@@ -74,6 +74,10 @@ public:
 	afx_msg void OnMenuTrayLog();
 	void UpdateDownloadCompleteToIni(int nResult);
 	CShopInfo* IsNotAllocShop(CString srcMac);
+	BOOL m_bWasServerConnected;
+	CString GetIpAddress();
+	CPtrList m_listArea;
+	CAreaInfo* GetAreaInfo(CString srcMac);
 };
 
 extern CKBChatServerDlg *g_pServerDlg;

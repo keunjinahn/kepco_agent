@@ -466,10 +466,11 @@ int CMsgrSvr::HndlPacket(CConSock *pSock)
 			strMac[12] = '\0';
 			strMsg.Format(_T("mac : %s , device no : %s , sensor state : %s, 누수1 : %c, 누수2: %c"), A2W(strMac),pPkt->device_no,pPkt->sensor_state,pPkt->leak_1_value, pPkt->leak_2_value);
 			*/
-			KBPKT_DATA_OBJ dataObj;
-			dataObj.setPacket(pHdr, pPkt);
-			g_pServerDlg->SensorDataInsert(&dataObj);
-			g_pServerDlg->LogMessage(LOG_LOGIN, dataObj.getPacketLog());
+			KBPKT_DATA_OBJ *pDataObj = new KBPKT_DATA_OBJ();
+			pDataObj->setPacket(pHdr, pPkt);
+			g_pServerDlg->SensorDataInsert(pDataObj);
+			g_pServerDlg->LogMessage(LOG_LOGIN, pDataObj->getPacketLog());
+			delete pDataObj;
 		}
 		break;
 	default:

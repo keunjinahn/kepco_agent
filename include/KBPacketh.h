@@ -31,6 +31,7 @@ enum LOGTYPE { LOG_CONNECT = 0, LOG_LOGIN, LOG_LEAVE, LOG_SOCKCLOSE, LOG_CHANNEL
 float Hex2float(char* hexadecimal);
 int char2Int(char c);
 float GetGenValue(float time, float amplitude);
+float GetGenValue2(float time, float amplitude);
 
 class KBPKT_HDR
 {
@@ -382,15 +383,36 @@ class CShopInfo
 public :
 	CShopInfo()
 	{
-		m_bActive = FALSE;
+
 		m_bIncident = FALSE;
+		CTime t = CTime::GetCurrentTime();
+		CString sTime = _T("");
+		sTime.Format(_T("%02d%02d%02d%02d%02d"), t.GetMonth(), t.GetDay(), t.GetHour(), t.GetMinute(), t.GetSecond());
 		m_currentTic = ::GetTickCount();
+		m_current_date = _wtol(sTime);
+		m_last_updated_date = _wtol(sTime);
 	};
 	KBPKT_DATA_OBJ m_objData;
 	CString strShopName;
-	BOOL m_bActive;
+
 	BOOL m_bIncident;
 	DWORD m_currentTic;
+	DWORD m_current_date;
+	DWORD m_last_updated_date;
+};
+
+class CAreaInfo
+{
+public:
+	CAreaInfo()
+	{
+		m_bActive = FALSE;
+		mac = _T("");
+		strShopName = _T("");
+	};
+	CString mac;
+	CString strShopName;
+	BOOL m_bActive;
 };
 
 class KBPKT_LOGIN_RS
@@ -658,15 +680,22 @@ static int char2Int(char c)
 
 
 
-static float GetGenValue(float time,float amplitude)
+static float GetGenValue(float time, float amplitude)
+{
+	float retData = float(200.0 * sin(time) * 0.1 + 30.0 + amplitude);
+	return retData;
+
+}
+
+static float GetGenValue2(float time,float amplitude)
 {
 	float value = 0.0;
 	float frequency = 1.0;
 	float phase = 2.0;
 	float invert = 1.0;
-	float offset = 0.0;
+	float offset = 2.0;
 	float t = frequency * time + phase;
-	value = (float)sin(100.0 * 3.14195 * t);
+	value = (float)sin(20.0 * 3.14195 * t);
 	float retData = (invert * amplitude * value + offset);
 	return retData;
 

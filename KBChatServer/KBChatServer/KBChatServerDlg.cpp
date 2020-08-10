@@ -58,7 +58,7 @@ CKBChatServerDlg *g_pServerDlg = NULL;
 CKBChatServerDlg::CKBChatServerDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CKBChatServerDlg::IDD, pParent)
 {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME2);
+	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON2);
 	m_fontLocation.CreateFont(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
 	m_fontShop.CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
 	m_fontSensorValue.CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS, PROOF_QUALITY, DEFAULT_PITCH, _T("굴림체"));
@@ -96,7 +96,7 @@ CKBChatServerDlg::CKBChatServerDlg(CWnd* pParent /*=NULL*/)
 		g_rectListItemInfo[i] = CRect(nLeft, nTop, nLeft + nWidth, nTop + nHeight);
 		nTop += nHeight + 4;
 	}
-
+	m_bWasServerConnected = FALSE;
 }
 
 void CKBChatServerDlg::DoDataExchange(CDataExchange* pDX)
@@ -173,7 +173,7 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
 	SetTimer(TIMER_INCIDENT, 1000, NULL);
 
-	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME2));  // Icon to use
+	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));  // Icon to use
 	if (!m_TrayIcon.Create(
 		NULL,                            // Let icon deal with its own messages
 		WM_ICON_NOTIFY,                  // Icon notify message to use
@@ -246,15 +246,17 @@ void CKBChatServerDlg::OnPaint()
 		strLocation.Format(_T("%s 수집서버"), m_ConfigInfo.locationname);
 		dc.DrawText(strLocation, CRect(194,17,1200,57), DT_CENTER | DT_TOP | DT_SINGLELINE);
 		pOldFont = dc.SelectObject(&m_fontShop);
-		CString strShop;
-		strShop.Format(_T("%s"), m_pCurShopInfo->strShopName);
-		dc.DrawText(strShop, CRect(839,104, 1107, 131), DT_CENTER | DT_TOP | DT_SINGLELINE);
-		/*
-		if (m_pCurShopInfo != NULL)
+		if (m_pCurShopInfo != NULL )
 		{
-			dc.DrawText(m_pCurShopInfo->strShopName, g_rectShopTitle, DT_CENTER | DT_TOP | DT_SINGLELINE);
+			CAreaInfo* pAreaInfo = (CAreaInfo*)GetAreaInfo(m_pCurShopInfo->m_objData.mac);
+			if (pAreaInfo != NULL)
+			{
+				CString strShop;
+				strShop.Format(_T("%s"), pAreaInfo->strShopName);
+				dc.DrawText(strShop, CRect(839, 104, 1107, 131), DT_CENTER | DT_TOP | DT_SINGLELINE);
+
+			}
 		}
-		*/
 
 		CString strTitle;
 		strTitle.Format(_T("%s"), _T("D-TRS 수집서버"));
@@ -262,12 +264,12 @@ void CKBChatServerDlg::OnPaint()
 		dc.DrawText(strTitle, CRect(17, 17, 175, 44), DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 		pOldFont = dc.SelectObject(&m_fontSensorValue_detail);
-		strTitle.Format(_T("%s"), _T("OPC UA 사용"));
+		//strTitle.Format(_T("%s"), _T("OPC UA 사용"));
 		//dc.DrawText(strTitle, CRect(1169, 803, 1264, 820), DT_CENTER | DT_TOP | DT_SINGLELINE);
 
 
 		pOldFont = DrawSensorInfo(&dc);
-		pOldFont = DrawItemList(&dc, m_ConfigInfo.m_pShowList);
+		pOldFont = DrawItemList(&dc, &m_listArea);
 		dc.SelectObject(pOldFont);
 
 		
@@ -302,6 +304,7 @@ BOOL CKBChatServerDlg::PreTranslateMessage(MSG* pMsg)
 void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 {
 	USES_CONVERSION;
+
 	char* host = "127.0.0.1";
 	char* userId = "dbadmin";
 	char* passwd = "kepco12!@";
@@ -330,6 +333,7 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 
 	mysql_close(&m_Mysql);
 
+
 	CShopInfo* pShopInfo = GetShopInfo(pObj->mac);
 
 	if (pShopInfo == NULL)
@@ -339,7 +343,11 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		pShopInfo->m_objData.mac = pObj->mac;
 		m_ConfigInfo.m_pShowList->AddTail(pShopInfo);
 	}
-	
+
+	CAreaInfo* pAreaInfo = GetAreaInfo(pObj->mac);
+	if (pAreaInfo != NULL)
+		pAreaInfo->m_bActive = TRUE;
+
 	pShopInfo->m_objData.device_no = pObj->device_no;
 	pShopInfo->m_objData.sensor_state = pObj->sensor_state;
 	pShopInfo->m_objData.leak_1_value = pObj->leak_1_value;
@@ -410,7 +418,12 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		|| pObj->humi_4_value < pShopInfo->m_objData.humi_4_value_min)
 		pShopInfo->m_objData.humi_4_value_min = pObj->humi_4_value;
 
-	pShopInfo->m_bActive = TRUE;
+
+
+	CTime t = CTime::GetCurrentTime();
+	CString sTime = _T("");
+	sTime.Format(_T("%02d%02d%02d%02d%02d"), t.GetMonth(), t.GetDay(), t.GetHour(), t.GetMinute(), t.GetSecond());
+	pShopInfo->m_current_date = _wtol(sTime);
 	pShopInfo->m_currentTic = ::GetTickCount();
 	pShopInfo->m_objData.dwCount++;
 
@@ -435,6 +448,23 @@ CShopInfo* CKBChatServerDlg::GetShopInfo(CString srcMac)
 	}
 	return NULL;
 }
+
+CAreaInfo* CKBChatServerDlg::GetAreaInfo(CString srcMac)
+{
+	USES_CONVERSION;
+	POSITION pos = m_listArea.GetHeadPosition();
+	while (pos)
+	{
+		CAreaInfo* pAreaInfo = (CAreaInfo*)m_listArea.GetNext(pos);
+		CString destMac;
+		destMac.Format(_T("%s"), pAreaInfo->mac);
+		if (destMac == srcMac)
+			return pAreaInfo;
+	}
+	return NULL;
+}
+
+
 
 CShopInfo* CKBChatServerDlg::IsNotAllocShop(CString srcMac)
 {
@@ -468,6 +498,13 @@ void CKBChatServerDlg::OnDestroy()
 		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->RemoveHead();
 		delete pShopInfo;
 	}
+
+	while (!m_listArea.IsEmpty())
+	{
+		CAreaInfo* pAreaInfo = (CAreaInfo*)m_listArea.RemoveHead();
+		delete pAreaInfo;
+	}
+	
 	if (m_pAPIAgentDlg != NULL)
 	{
 		delete m_pAPIAgentDlg;
@@ -553,13 +590,14 @@ void CKBChatServerDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	{
 		for (int i = 0; i< SHOP_INFO_COUNT;i++)
 		{
-			if (g_rectListItemInfo[i].PtInRect(point) && i < (m_ConfigInfo.m_pShowList->GetCount()))
+			if (g_rectListItemInfo[i].PtInRect(point) && i < (m_listArea.GetCount()))
 			{
-				CShopInfo* pShopInfo = (CShopInfo*) m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
-
-				if (pShopInfo != NULL)
+				CAreaInfo* pAreaInfo = (CAreaInfo*)m_listArea.GetAt(m_listArea.FindIndex(i));
+				if (pAreaInfo != NULL)
 				{
-					m_pCurShopInfo = pShopInfo;
+					CShopInfo* pShopInfo = GetShopInfo(pAreaInfo->mac);
+					if(pShopInfo != NULL)
+						m_pCurShopInfo = pShopInfo;
 				}
 				Invalidate(FALSE);
 			}
@@ -613,6 +651,8 @@ CString CKBChatServerDlg::GetProgramPathW()
 void CKBChatServerDlg::LoadConfig()
 {
 	USES_CONVERSION;
+
+	
 	CString strConfig;
 	strConfig.Format(_T("%s\\config.ini"), GetProgramPathW());
 	CString strKey = _T("INFO");
@@ -626,8 +666,20 @@ void CKBChatServerDlg::LoadConfig()
 	m_ConfigInfo.web_port = _wtoi(strValue);
 
 
-	::GetPrivateProfileString(strKey, _T("locationname"), _T("111"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+
+	strKey = GetIpAddress();
+
+#ifdef _DEBUG
+		strKey = _T("70.112.1.187");
+#endif
+
+	::GetPrivateProfileString(strKey, _T("locationname"), _T("UNKNOWN"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 	m_ConfigInfo.locationname.Format(_T("%s"),strValue);
+	if (m_ConfigInfo.locationname == _T("UNKNOWN"))
+	{
+		AfxMessageBox(_T("미인식지역 전처리서버입니다 관리자에게 문의하여주세요!!!"));
+		EndDialog(IDOK);
+	}
 	::GetPrivateProfileString(strKey, _T("locationcode"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 	m_ConfigInfo.locationcode.Format(_T("%s"), strValue);
 
@@ -638,6 +690,7 @@ void CKBChatServerDlg::LoadConfig()
 
 	::GetPrivateProfileString(strKey, _T("shopcount"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 	int nShopCount = _wtoi(strValue);
+	/*
 	CString sNum;
 	CString sMac;
 	for (int i = 0; i < nShopCount; i++)
@@ -655,6 +708,7 @@ void CKBChatServerDlg::LoadConfig()
 		if (i == 0)
 			m_pCurShopInfo = pShopInfo;
 	}
+	*/
 	strValue.Format(_T("%s"), AGENT_VERSION);
 	::WritePrivateProfileString(strKey, _T("agent_ver"), strValue, strConfig);
 }
@@ -892,8 +946,9 @@ void CKBChatServerDlg::CheckIncident()
 				g_pApiAgentDlg->AddAPI(pData);
 			}
 			CHECKRESULT _checkResult_4 = CHECK_NORMAL;
-			DWORD dwTickCount = ::GetTickCount() - pShopInfo->m_currentTic;
-			if (dwTickCount > (1000 * 30))
+
+			DWORD dwDiffSecond = pShopInfo->m_current_date - pShopInfo->m_last_updated_date;
+			if (dwDiffSecond > (30))
 			{
 				_checkResult_4 = CHECK_WARRING;
 				APICALLDATA* pData = new APICALLDATA;
@@ -1242,23 +1297,29 @@ CFont* CKBChatServerDlg::DrawSensorInfo(CMemDC_ *pDC)
 CFont* CKBChatServerDlg::DrawItemList(CDC* pDC, CPtrList* pItemList)
 {
 	CFont* pOldFont = pDC->SelectObject(&m_fontLeftShopName);
+
 	CBrush* oldBrush;
 	oldBrush = pDC->SelectObject(&m_blushInActive);
 	int nCur = 0;
 	for (int i = 0; i < pItemList->GetCount(); i++)
 	{
-		CShopInfo* pShopInfo = (CShopInfo*)pItemList->GetAt(pItemList->FindIndex(i));
-		if (pShopInfo != NULL)
+		CAreaInfo* pAreaInfo = (CAreaInfo*)pItemList->GetAt(pItemList->FindIndex(i));
+		if (i > 9)
+			break;
+		if (pAreaInfo != NULL)
 		{
 			pDC->FillSolidRect(CRect(g_rectListItemInfo[i].left-1, g_rectListItemInfo[i].top - 1, g_rectListItemInfo[i].right+1, g_rectListItemInfo[i].bottom+1), RGB(28, 33, 39));
-			if (m_pCurShopInfo == pShopInfo)
-				pDC->FillSolidRect(g_rectListItemInfo[i], RGB(42, 44, 65));
-			else
-				pDC->FillSolidRect(g_rectListItemInfo[i], RGB(60, 65, 85));
+			if (m_pCurShopInfo != NULL)
+			{
+				if (GetAreaInfo(m_pCurShopInfo->m_objData.mac) == pAreaInfo)
+					pDC->FillSolidRect(g_rectListItemInfo[i], RGB(42, 44, 65));
+				else
+					pDC->FillSolidRect(g_rectListItemInfo[i], RGB(60, 65, 85));
+			}
 			pDC->SetTextColor(RGB(255, 255, 255));
 			CRect rectDate = CRect(g_rectListItemInfo[i].left + 4, g_rectListItemInfo[i].top + 6, g_rectListItemInfo[i].right - 2, g_rectListItemInfo[i].bottom - 18);
-			pDC->DrawText(pShopInfo->strShopName, -1, rectDate, DT_CENTER | DT_WORDBREAK);
-			if (pShopInfo->m_bActive == TRUE)
+			pDC->DrawText(pAreaInfo->strShopName, -1, rectDate, DT_CENTER | DT_WORDBREAK);
+			if (pAreaInfo->m_bActive == TRUE)
 			{
 				oldBrush = pDC->SelectObject(&m_blushActive);
 				pDC->Ellipse(g_rectListItemInfo[i].left + 65, g_rectListItemInfo[i].bottom - 20, g_rectListItemInfo[i].left + 65 + 15, g_rectListItemInfo[i].bottom - 5);
@@ -1275,6 +1336,7 @@ CFont* CKBChatServerDlg::DrawItemList(CDC* pDC, CPtrList* pItemList)
 		nCur += 1;
 	}
 	pDC->SelectObject(oldBrush);
+
 	return pOldFont;
 }
 
@@ -1285,11 +1347,11 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		for(int i=0;i<SHOP_INFO_COUNT;i++)
 			InvalidateRect(g_rectListItemInfo[i], FALSE);
-		for (int i = 0; i < m_ConfigInfo.m_pShowList->GetCount(); i++)
+		for (int i = 0; i < m_listArea.GetCount(); i++)
 		{
-			CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetAt(m_ConfigInfo.m_pShowList->FindIndex(i));
-			if (pShopInfo != NULL)
-				pShopInfo->m_bActive = FALSE;
+			CAreaInfo* pAreaInfo = (CAreaInfo*)m_listArea.GetAt(m_listArea .FindIndex(i));
+			if (pAreaInfo != NULL)
+				pAreaInfo->m_bActive = FALSE;
 		}
 	}
 	else if (nIDEvent == TIMER_SENSOR_DATA_SEND)
@@ -1358,4 +1420,38 @@ void CKBChatServerDlg::OnMenuTrayExit()
 void CKBChatServerDlg::OnMenuTrayLog()
 {
 	ShowLoginDlg();
+}
+
+#define DESIRED_WINSOCK_VERSION        0x0101
+#define MINIMUM_WINSOCK_VERSION        0x0001
+CString CKBChatServerDlg::GetIpAddress()
+{
+	WSADATA wsadata;
+	CString strIP; // 이 변수에 IP주소가 저장된다.
+	strIP = "";
+
+	if (!WSAStartup(DESIRED_WINSOCK_VERSION, &wsadata))
+	{
+		if (wsadata.wVersion >= MINIMUM_WINSOCK_VERSION)
+		{
+			HOSTENT* p_host_info;
+			IN_ADDR in;
+			char host_name[128] = { 0, };
+
+			gethostname(host_name, 128);
+			p_host_info = gethostbyname(host_name);
+
+			if (p_host_info != NULL)
+			{
+				for (int i = 0; p_host_info->h_addr_list[i]; i++)
+				{
+					memcpy(&in, p_host_info->h_addr_list[i], 4);
+					strIP = inet_ntoa(in);
+				}
+			}
+		}
+		WSACleanup();
+	}
+	return strIP;
+
 }

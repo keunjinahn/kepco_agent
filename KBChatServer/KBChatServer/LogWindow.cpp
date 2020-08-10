@@ -62,6 +62,8 @@ CString LogWindow::GetLogTypeStr(LOGTYPE typeLog)
 void LogWindow::LogMessage(LOGTYPE typeLog, CString strMsg)
 {
 	USES_CONVERSION;
+	if(m_lbLogBox.GetCount() > 500)
+		m_lbLogBox.ResetContent();
 	CString strTime;
 	CTime t = CTime::GetCurrentTime();
 	strTime.Format(_T("[%04d-%02d-%02d %02d:%02d:%02d]"), t.GetYear(), t.GetMonth(), t.GetDay(), t.GetHour(), t.GetMinute(), t.GetSecond());
