@@ -19,6 +19,7 @@ from ConfigParser import ConfigParser
 version = "1.0.0"
 import getpass
 import telnetlib
+import pyodbc
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 up_dir = os.path.dirname(current_dir)
@@ -29,15 +30,14 @@ import requests
 import ctypes
 
 import warnings
-warnings.filterwarnings("ignore", category=UnicodeWarning)
+warnings.filterwarnings("ignore", category=UnicodeWarning);
 
-ZUSI_COMP = b"./ZUSI:COMP\n"
-ZUSI_TBS = b"./ZUSI:TBS\n"
-ZUSI_ET = b"./ZUSI:ET\n"
-ZPAL_TSL = b"./ZPAL::TSL\n"
-ZAHO = b"./ZAHO\n"
-ZDTF_TTRX = b"./ZDTF:TTRX\n"
-
+ZUSI_COMP = b"ZUSI:COMP;\r\n"
+ZUSI_TBS = b"ZUSI:TBS;\r\n"
+ZUSI_ET = b"ZUSI:ET;\r\n"
+ZPAL_TSL = b"ZPAL::TSL;\r\n"
+ZDTF_TTRX = b"ZDTF:TTRX;\r\n"
+EXIT = b"ZZZ;\r\n"
 # ZUSI_COMP = b"./ZUSI:COMP.sh\n"
 # ZUSI_TBS = b"./ZUSI:TBS.sh\n"
 # ZUSI_ET = b"./ZUSI:ET.sh\n"
@@ -78,7 +78,6 @@ print("SERVER INFO : ", SERVER_INFO)
 SERVER_PORT = config['port'].replace("\"", "")
 print("SERVER PORT : ", SERVER_PORT)
 
-
 class EventManager(object):
     def __init__(self, logger=None):
         print("EventManager init")
@@ -92,6 +91,10 @@ class EventManager(object):
         self.kepco_server_info = None
         self.api_headers = {'Content-type': 'application/json'}
         self.ipaddress = None
+        self.db = None
+        self.cnxn = None
+
+
     def Log(self,msg) :
         self.logger.info(msg)
         if self.log_print_enable is True :
@@ -111,7 +114,7 @@ class EventManager(object):
         self.kepco_server_info = json.loads(result)
         print("kepco_server_info : ", self.kepco_server_info)
         self.ipaddress = self.kepco_server_info['trs_server_ip']
-
+        print("kepco_server_info ipaddress : ", self.ipaddress)
         # self.Log(str(kepco_server_info))
         # except:
         #     self.Log("get_trs_info Exception")
@@ -122,22 +125,28 @@ class EventManager(object):
         HOST = self.kepco_server_info['trs_server_ip']
         user = self.kepco_server_info['trs_server_user_id']
         password = self.kepco_server_info['trs_server_user_pass']
+        print("user id : ",user)
+        print("user pass : ", password)
         tn = telnetlib.Telnet(HOST)
-        tn.read_until(b"login: ")
-        tn.write(user.encode('ascii') + b"\n")
-        tn.read_until(b"Password: ")
-        tn.write(password.encode('ascii') + b"\n")
+        print(tn.read_until('<'))
+        # tn.read_until(b"ENTER USERNAME < ")
+        tn.write("SYSTEM\r\n")
+        # tn.read_until(b"ENTER PASSWORD < ")
+        print(tn.read_until('<'))
+        tn.write(password.encode('ascii') + "\r\n")
+        print(tn.read_until('<'))
         return tn
 
     def get_trs_event(self):
         # try:
+        print("start get_trs_event :")
         trs_event_info = {}
         tn = self.login_trs_server()
         tn.write(ZUSI_COMP)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zusi_comp_list = []
         b_start = False
-        for line in tn.read_all().decode('ascii').split('\n'):
+        for line in tn.read_all().decode('ascii').split('\r\n'):
             # print(line)
             if len(line) > 1 :
                 if line.find('WORKING') != -1 :
@@ -159,10 +168,10 @@ class EventManager(object):
                     # print(u_obj)
                     zusi_comp_list.append(u_obj)
         trs_event_info["zusi_comp"] = zusi_comp_list
-
+        #
         tn = self.login_trs_server()
         tn.write(ZUSI_TBS)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zusi_tbs_list = []
         b_start = False
         for line in tn.read_all().decode('ascii').split('\n'):
@@ -188,7 +197,7 @@ class EventManager(object):
 
         tn = self.login_trs_server()
         tn.write(ZUSI_ET)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zusi_et_list = []
         b_start = False
         for line in tn.read_all().decode('ascii').split('\n'):
@@ -214,7 +223,7 @@ class EventManager(object):
 
         tn = self.login_trs_server()
         tn.write(ZPAL_TSL)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zpal_tsl_list = []
         b_start = False
         for line in tn.read_all().decode('ascii').split('\n'):
@@ -237,11 +246,12 @@ class EventManager(object):
                         "TSL3": line[51:].strip(),
                     }
                     zpal_tsl_list.append(u_obj)
-        trs_event_info["zpal_tsl"] = zusi_et_list
+
+        trs_event_info["zpal_tsl"] = zpal_tsl_list
 
         tn = self.login_trs_server()
         tn.write(ZAHO)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zaho_list = []
         b_start = False
         temp_line_list = []
@@ -280,7 +290,7 @@ class EventManager(object):
 
         tn = self.login_trs_server()
         tn.write(ZDTF_TTRX)
-        tn.write(b"exit\n")
+        tn.write(EXIT)
         zdtf_ttrx_list = []
         b_start = False
         for line in tn.read_all().decode('ascii').split('\n'):
@@ -304,29 +314,103 @@ class EventManager(object):
                     }
                     zdtf_ttrx_list.append(u_obj)
         trs_event_info["zdtf_ttrx"] = zdtf_ttrx_list
+
+
         # except:
         #     self.Log("get_trs_info Exception")
         return trs_event_info
 
     def get_tdis_event(self):
-        return []
+        tdis_event_list = []
+        if not self.connect_to_db():
+            self.logger.error('Database initialize failed. Exit.')
+            return False
+
+        print("connected db..")
+        cursor = self.cursor()
+        try:
+            print("try...")
+
+            sql = "select A.*,B.event_name,B.event_kind from event_his AS A JOIN event_code_info AS B ON A.event_code=B.event_code WHERE A.event_dtime > '2020-0801 10:00:00'"
+            cursor.execute(sql)
+
+            recv_data = [dict(zip(zip(*cursor.description)[0], row)) for row in cursor.fetchall()]
+            for recv in recv_data:
+                print("date : ", recv['event_dtime'])
+                tdis_event_list.append(recv)
+
+        finally:
+            if not cursor:
+                cursor.close()
+            self.disconnect()
+        return tdis_event_list
+
+    def connect_to_db(self, db_info=None):
+        # DB_INFO_MODULE = "Driver={ODBC Driver 13 for SQL Server};Server=tcp:70.106.1.159,1433;Database=TBMS;Uid=EVENTMANAGER;Pwd=kwkepcose[7690;Encrypt=no;TrustServerCertificate=no;Connection Timeout=30;"
+        DB_INFO_MODULE = "Driver={ODBC Driver 13 for SQL Server};Server=tcp:70.106.1.140,1433;Database=TDIS;Uid=EVENTMANAGER;Pwd=kwkepcose[7690;Encrypt=no;TrustServerCertificate=no;Connection Timeout=30;"
+        print("Database connecting...")
+        info = db_info
+
+        # try:
+        self.cnxn = pyodbc.connect(DB_INFO_MODULE)
+        cursor = self.cnxn.cursor()
+        self.logger.info('Database connected.')
+        return True
+        #
+        # except pyodbc.Error, e:
+        #     self.logger.error('Database connection failed: %s' % str(e))
+        #
+        #     return False
+
+    def disconnect(self):
+        if self.db:
+            self.db.close()
+
+    def cursor(self):
+        if self.cnxn is None:
+            return None
+        return self.cnxn.cursor()
 
     def get_tbms_event(self):
-        return []
+        tbms_event_list = []
+        if not self.connect_to_db():
+            self.logger.error('Database initialize failed. Exit.')
+            return False
+
+        print("connected db..")
+        cursor = self.cursor()
+        try :
+            print("try...")
+
+            sql = "select top 20 A.*,B.ALARM_NM,B.ALARM_CLASS from RTU_ALARM AS A JOIN ALARM_CODE AS B ON A.ALARM_CD=B.ALARM_CD WHERE A.OCCR_DTM > '2020-0811 10:00:00'"
+            cursor.execute(sql)
+
+            recv_data = [dict(zip(zip(*cursor.description)[0], row)) for row in cursor.fetchall()]
+            for recv in recv_data:
+                print("date : ",recv['OCCR_DTM'])
+                tbms_event_list.append(recv)
+
+        finally:
+            if not cursor:
+                cursor.close()
+            self.disconnect()
+        return tbms_event_list
 
     def run(self):
 
         while self.is_running:
             try:
                 self.get_server_info()
-                trs_event_info = json.dumps(self.get_trs_event())
+                #trs_event_info = json.dumps(self.get_trs_event())
                 tdis_event_info = self.get_tdis_event()
-                tbms_event_info = self.get_tbms_event()
+
+                # tbms_event_info = self.get_tbms_event()
+                print("tbms_event_info :", tdis_event_info)
                 keop_event_info = {
                     "ipaddress": self.ipaddress,
-                    "trs_event": trs_event_info,
-                    "tdis_event": tdis_event_info,
-                    "tbms_event": tbms_event_info,
+                    "trs_event": None,
+                    "tdis_event": json.dumps(tdis_event_info),
+                    "tbms_event": None,
 
                 }
                 print("len : ", len(str(keop_event_info)), ", kepco_event_send : ",keop_event_info)
