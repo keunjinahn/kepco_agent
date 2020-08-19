@@ -69,7 +69,8 @@ enum API_CMD {
 	API_SENSOR_DATA = 2,
 	API_CHECK_CONFIG = 3,
 	API_INCIDENT_DATA = 4,
-	API_DOWNLOAD_FILE = 5
+	API_DOWNLOAD_FILE = 5,
+	API_RESOURCE=6
 };
 
 #define _mac "mac"
@@ -95,8 +96,13 @@ enum API_CMD {
 #define _error_code "error_code"
 #define _incident_type "incident_type"
 #define _level "level"
+#define _ipaddress "ipaddress"
+#define _cpu_value "cpu_value"
+#define _ram_avail_value "ram_avail_value"
+#define _ram_phys_value "ram_phys_value"
 
 #define RETURN_SUCESS 200
+#define RETURN_NOT_AREA_CODE 409
 
 #define RUN_APP_NAME  _T("KCollectionServer_setup.exe")
 #define AGENT_VERSION _T("1.0.2")

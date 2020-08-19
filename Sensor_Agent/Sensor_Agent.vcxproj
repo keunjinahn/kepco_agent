@@ -119,6 +119,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <OutputFile>..\bin\Sensor_Agent.exe</OutputFile>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <UACUIAccess>true</UACUIAccess>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -173,6 +175,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>..\bin\Sensor_Agent.exe</OutputFile>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
+      <UACUIAccess>false</UACUIAccess>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

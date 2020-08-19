@@ -182,37 +182,42 @@ BOOL CApiAgent::makeJsonData(APICALLDATA* pParamMap)
 		CString sData = _T("");
 		switch (_wtoi(value))
 		{
-		case API_SENSOR_REGISTER:
-		{
-			sData = makePostParam(pParamMap);
-			call_API(_wtoi(value), _T("/api/v1/agent/device_register?"), sData,_T("POST"));
+			case API_SENSOR_REGISTER:
+			{
+				sData = makePostParam(pParamMap);
+				call_API(_wtoi(value), _T("/api/v1/agent/device_register?"), sData, _T("POST"));
+			}
+			break;
+			case API_SENSOR_DATA:
+			{
+				sData = makePostParam(pParamMap);
+				call_API(_wtoi(value), _T("/api/v1/agent/sensor_data?"), sData, _T("POST"));
+			}
+			break;
+			case API_CHECK_CONFIG:
+			{
+				sData = makeGetParam(pParamMap);
+				call_API(_wtoi(value), _T("/api/v1/agent/check_config?"), sData, _T("GET"));
+			}
+			break;
+			case API_INCIDENT_DATA:
+			{
+				sData = makePostParam(pParamMap);
+				call_API(_wtoi(value), _T("/api/v1/agent/incident_data?"), sData, _T("POST"));
+			}
+			break;
+			case API_DOWNLOAD_FILE:
+			{
+				DownloadFileFromURL(pParamMap, g_pServerDlg->m_ConfigInfo.server_ip, g_pServerDlg->m_ConfigInfo.web_port);
+			}
+			break;
+			case API_RESOURCE:
+			{
+				sData = makePostParam(pParamMap);
+				call_API(_wtoi(value), _T("/api/v1/agent/kepco_resource_send?"), sData, _T("POST"));
+			}
+			break;
 		}
-		break;
-		case API_SENSOR_DATA:
-		{
-			sData = makePostParam(pParamMap);
-			call_API(_wtoi(value), _T("/api/v1/agent/sensor_data?"), sData, _T("POST"));
-		}
-		break;
-		case API_CHECK_CONFIG:
-		{
-			sData = makeGetParam(pParamMap);
-			call_API(_wtoi(value), _T("/api/v1/agent/check_config?"), sData, _T("GET"));
-		}
-		break;
-		case API_INCIDENT_DATA:
-		{
-			sData = makePostParam(pParamMap);
-			call_API(_wtoi(value), _T("/api/v1/agent/incident_data?"), sData, _T("POST"));
-		}
-		break;
-		case API_DOWNLOAD_FILE :
-		{
-			DownloadFileFromURL(pParamMap, g_pServerDlg->m_ConfigInfo.server_ip, g_pServerDlg->m_ConfigInfo.web_port);
-		}
-		break;
-		}
-
 	}
 	else
 		return FALSE;
@@ -431,6 +436,35 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 			g_pApiAgentDlg->AddAPI(pData);
 		}
 	}
+	else if (retCode == RETURN_NOT_AREA_CODE)
+	{
+		if (g_pServerDlg->m_ConfigInfo.agent_type == AGENT_RESOURCE)
+		{
+			Json::Value itemJson = root.get("objects", "");
+			CString agent_ver;
+			agent_ver.Format(_T("%s"), A2W(itemJson.get("agent_ver", "").asString().c_str()));
+			g_pServerDlg->m_ConfigInfo.data_upload_second = itemJson.get("data_upload_second", "").asInt();
+
+			if (agent_ver.GetLength() > 1
+				&& AGENT_VERSION != agent_ver)
+			{
+				CString sCmd;
+				sCmd.Format(_T("%d"), API_DOWNLOAD_FILE);
+				APICALLDATA* pData = new APICALLDATA;
+				pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+				CString strUrl = _T("");
+				//strUrl.Format(_T("http://%s:%d\\download\\%s"), g_pServerDlg->m_ConfigInfo.server_ip, g_pServerDlg->m_ConfigInfo.web_port, RUN_APP_NAME);
+				//strUrl.Format(_T("http://%s:%d\\download\\%s"),_T("203.241.124.20"),443, RUN_APP_NAME);
+				strUrl.Format(_T("download\\%s"), RUN_APP_NAME);
+				pData->insert(APICALLDATA::value_type(_T("DOWNLOAD_URL"), strUrl));
+				pData->insert(APICALLDATA::value_type(_T("FILE_NAME"), RUN_APP_NAME));
+				g_pApiAgentDlg->AddAPI(pData);
+			}
+
+		}
+		g_pServerDlg->m_bWasServerConnected = TRUE;
+
+	}
 }
 
 
@@ -445,10 +479,8 @@ void CApiAgent::DownloadFileFromURL(APICALLDATA* pData, CString sServer, int nPo
 		CString sURL = (*it).second;
 		HANDLE h_wait_event = CreateEvent(NULL, TRUE, FALSE, _T("GIFW_01"));
 		HINTERNET h_session = ::InternetOpen(_T("Tipssoft Example"), PRE_CONFIG_INTERNET_ACCESS, NULL, INTERNET_INVALID_PORT_NUMBER, 0);
-
-		//HINTERNET h_connect = ::InternetConnect(h_session, sServer, nPort, _T(""), _T(""), INTERNET_SERVICE_HTTP, 0, 0);
-		HINTERNET h_connect = ::InternetConnect(h_session, _T("203.241.124.20"), 443, _T(""), _T(""), INTERNET_SERVICE_HTTP, 0, 0);
-
+		HINTERNET h_connect = ::InternetConnect(h_session, sServer, nPort, _T(""), _T(""), INTERNET_SERVICE_HTTP, 0, 0);
+		//HINTERNET h_connect = ::InternetConnect(h_session, _T("203.241.124.20"), 443, _T(""), _T(""), INTERNET_SERVICE_HTTP, 0, 0);
 		// 접속된 사이트에서 특정 경로에 있는 파일을 읽을수 있도록 요청한다. 그림의 경로를 명시할때는 사이트 주소를 제외한 나머지 경로만
 		// 명시하면 됩니다.
 		HINTERNET h_http_file = ::HttpOpenRequest(h_connect, _T("GET"), sURL,

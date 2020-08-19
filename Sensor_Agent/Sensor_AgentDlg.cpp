@@ -17,6 +17,7 @@
 
 #define TIMER_SEND_INTERVAL 1000
 #define TIMER_KCOLLECTION_CHECK 1
+#define TIMER_KCOLLECTION_RESOURCE_CHECK 2
 
 
 DWORD	g_platform_id;
@@ -67,6 +68,7 @@ CSensorAgentDlg::CSensorAgentDlg(CWnd* pParent /*=nullptr*/)
 	m_pCurShopInfo = NULL;
 	m_dwFrequencyIndex = 0.0;
 	m_nProfile = 0;
+	m_typeAgent = AGENT_SENSOR;
 }
 
 void CSensorAgentDlg::DoDataExchange(CDataExchange* pDX)
@@ -166,6 +168,7 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	SetDlgItemTextW(IDC_EDT_PROFILE, _T("0"));
 	
 	LoadConfig();
+	LoadAgentConfig();
 
 	((CButton*)GetDlgItem(IDC_RADIO_TCP))->SetCheck(TRUE);
 	((CButton*)GetDlgItem(IDC_RADIO_OPCUA))->SetCheck(FALSE);
@@ -195,7 +198,11 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	
 	MoveWindow(0, 0, 0, 0);
 	SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
-
+	if (m_typeAgent == AGENT_SENSOR)
+	{
+		SetTimer(TIMER_KCOLLECTION_RESOURCE_CHECK, 1000, NULL);
+	}
+	SetAutoStart(TRUE);
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -271,6 +278,19 @@ CString CSensorAgentDlg::GetProgramPathW()
 
 void CSensorAgentDlg::LoadConfig()
 {
+	USES_CONVERSION;
+	CString strConfig;
+	strConfig.Format(_T("%s\\config.ini"), GetProgramPathW());
+	CString strKey = _T("INFO");
+	CString strValue;
+	char sValue[1024];
+	::GetPrivateProfileString(strKey, _T("agent_type"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+	m_typeAgent = (AGENT_TYPE)_wtoi(strValue);
+}
+
+
+void CSensorAgentDlg::LoadAgentConfig()
+{
 
 	USES_CONVERSION;
 	CString strConfig;
@@ -296,7 +316,7 @@ void CSensorAgentDlg::LoadConfig()
 			CShopInfo* pShopInfo = new CShopInfo();
 			sNum.Format(_T("%02d"), i + 1);
 			::GetPrivateProfileString(strKey, sNum, _T(""), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-			pShopInfo->strShopName.Format(_T("%s_%s"), locationname,strValue);
+			pShopInfo->strShopName.Format(_T("%s_%s"), locationname, strValue);
 			sMac.Format(_T("%02d_mac"), i + 1);
 			::GetPrivateProfileString(strKey, sMac, _T(""), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 			pShopInfo->m_objData.mac = strValue;
@@ -325,15 +345,21 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			return;
 		}
-#ifndef _DEBUG
-		//StartCollectionServer();
-#endif
+		StartCollectionServer();
 		SetTimer(TIMER_KCOLLECTION_CHECK,10000,NULL);
+	}
+	else if (nIDEvent == TIMER_KCOLLECTION_RESOURCE_CHECK)
+	{
+		KillTimer(TIMER_KCOLLECTION_RESOURCE_CHECK);
+
+		StartCollectionResourceServer();
+
+		SetTimer(TIMER_KCOLLECTION_RESOURCE_CHECK, 30000, NULL);
 	}
 	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
 		CTime t = CTime::GetCurrentTime();
-		m_dwFrequencyIndex += 0.01;
+		m_dwFrequencyIndex += 1;
 		SendShopData();
 	}
 
@@ -667,9 +693,56 @@ void CSensorAgentDlg::LogMessage(LOGTYPE typeLog, CString strMsg)
 void CSensorAgentDlg::StartCollectionServer()
 {
 	USES_CONVERSION;
-
 	if(!getStateProcess(RUN_APP_NAME))
 		WinExec(W2A(RUN_APP_NAME), SW_SHOW);
+}
+
+void CSensorAgentDlg::StartCollectionResourceServer()
+{
+	USES_CONVERSION;
+
+	CString sRunCmd;
+	sRunCmd.Format(_T("%s\\python.exe %s"), GetProgramPathW(), RUN_RESOURCE_PYC_NAME);
+
+	/*
+	PROCESS_INFORMATION ProcessInfo;
+	TCHAR runPath[MAX_PATH];
+	CString strDestFile;
+	wsprintf(runPath, _T("%s\\python.exe %s"), GetProgramPathW(), RUN_RESOURCE_PYC_NAME);
+
+	STARTUPINFO si;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_SHOW;
+	ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
+
+
+	if ((int)ShellExecute(NULL, _T("open"), runPath, NULL, NULL, SW_SHOWNORMAL) > 32)
+	{
+		return;
+	}
+	else
+		return;
+
+	if (!CreateProcessW(NULL, runPath, NULL, NULL, FALSE,
+		CREATE_NEW_CONSOLE,
+		NULL,
+		NULL,
+		&si,
+		&ProcessInfo))
+	{
+		if ((int)ShellExecute(NULL, _T("open"), runPath, NULL, NULL, SW_SHOWNORMAL) > 32)
+		{
+			return ;
+		}
+		else
+			return ;
+	}
+	*/
+
+
+	WinExec(W2A(sRunCmd), SW_HIDE);
 }
 
 typedef NTSTATUS(NTAPI* _NtQueryInformationProcess)(
@@ -1077,6 +1150,13 @@ BOOL CSensorAgentDlg::getStateProcess(CString name)
 }
 
 
+BOOL CSensorAgentDlg::IsRunningResource()
+{
+	TCHAR strPyCmd[20];
+	ZeroMemory(strPyCmd, sizeof(strPyCmd));
+	_tcscpy(strPyCmd, _T("python.exe"));
+	return IsRunningProcess(strPyCmd, RUN_RESOURCE_PYC_NAME);
+}
 
 void CSensorAgentDlg::OnMenuTrayExit()
 {
@@ -1124,4 +1204,32 @@ BOOL CSensorAgentDlg::isSetupProgramInstall()
 		return TRUE;
 	}
 	return FALSE;
+}
+
+void CSensorAgentDlg::SetAutoStart(BOOL bStart)
+{
+	USES_CONVERSION;
+	HKEY hKey;
+	CString strUpdateExePath;
+	if (bStart)
+		strUpdateExePath.Format(_T("%s\\Sensor_Agent.exe"), GetProgramPathW());
+	else
+		strUpdateExePath.Format(_T(""));
+	LONG lnRes = RegOpenKeyEx(
+		HKEY_CURRENT_USER,
+		_T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"),
+		0L, KEY_WRITE,
+		&hKey
+	);
+	if (ERROR_SUCCESS == lnRes)
+	{
+		lnRes = RegSetValueExW(hKey,
+			_T("Sensor_Agent"), // key name
+			0,
+			REG_SZ,
+			(LPBYTE)(LPCTSTR)strUpdateExePath,   // 실행할 어플의 경로
+			strlen(W2A(strUpdateExePath)) * 2 + 1);
+	}
+
+	RegCloseKey(hKey);
 }

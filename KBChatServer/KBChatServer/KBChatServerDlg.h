@@ -78,6 +78,10 @@ public:
 	CString GetIpAddress();
 	CPtrList m_listArea;
 	CAreaInfo* GetAreaInfo(CString srcMac);
+	void CheckResource();
+	void Init_Cpu();
+	double getCpuCurrentValue();
+	void getRAMStatus(int& availableMem, int& physicalMem);
 };
 
 extern CKBChatServerDlg *g_pServerDlg;

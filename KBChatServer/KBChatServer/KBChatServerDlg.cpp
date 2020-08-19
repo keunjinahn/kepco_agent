@@ -7,6 +7,7 @@
 #include "KBChatServerDlg.h"
 #include "afxdialogex.h"
 #include "MsgrSvr.h"
+#include "pdh.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -19,7 +20,12 @@ CRect g_rectSensorInfoArea = CRect(242, 155, 1213, 799);
 #define TIMER_OPCUA_LOAD 2001
 #define TIMER_CHECK_CONFIG 2002
 #define TIMER_INCIDENT 2003
+#define TIMER_RESOURCE 2004
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
+
+
+static PDH_HQUERY cpuQuery;
+static PDH_HCOUNTER cpuTotal;
 
 class CAboutDlg : public CDialogEx
 {
@@ -166,13 +172,29 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	}
 	LoadConfig();
 	InitControl();
-	MoveWindow(CRect(0,0,1283, 869));
-	CenterWindow();
-	SetTimer(TIMER_ACTIVE_LAMP, 500, NULL);
-	SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
-	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
-	SetTimer(TIMER_INCIDENT, 1000, NULL);
 
+	if (m_ConfigInfo.agent_type == AGENT_SENSOR)
+	{
+		MoveWindow(CRect(0, 0, 1283, 869));
+		CenterWindow();
+		SetTimer(TIMER_ACTIVE_LAMP, 500, NULL);
+		SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
+		SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
+		SetTimer(TIMER_INCIDENT, 1000, NULL);
+	}
+	else if (m_ConfigInfo.agent_type == AGENT_RESOURCE)
+	{
+		Init_Cpu();
+		SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
+		SetTimer(TIMER_RESOURCE, 1000, NULL);
+
+		UINT nStyle = 0;
+		nStyle |= WS_MAXIMIZEBOX;
+		nStyle |= WS_MINIMIZEBOX;
+		ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
+
+		MoveWindow(CRect(0, 0, 0, 0));
+	}
 	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));  // Icon to use
 	if (!m_TrayIcon.Create(
 		NULL,                            // Let icon deal with its own messages
@@ -189,7 +211,6 @@ BOOL CKBChatServerDlg::OnInitDialog()
 		return FALSE;
 	}
 	m_TrayIcon.SetMenuDefaultItem(0, TRUE);
-
 	SetWindowText(_T("KConnectionServer"));
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -664,7 +685,9 @@ void CKBChatServerDlg::LoadConfig()
 	m_ConfigInfo.port = _wtoi(strValue);
 	::GetPrivateProfileString(strKey, _T("web_port"), _T("443"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 	m_ConfigInfo.web_port = _wtoi(strValue);
-
+	::GetPrivateProfileString(strKey, _T("agent_type"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+	m_ConfigInfo.agent_type = (AGENT_TYPE)_wtoi(strValue);
+	
 
 
 	strKey = GetIpAddress();
@@ -724,6 +747,8 @@ void CKBChatServerDlg::UpdateDownloadCompleteToIni(int nResult)
 	char sValue[1024];
 	strValue.Format(_T("%d"),nResult);
 	::WritePrivateProfileString(strKey, _T("update_completed"), strValue, strConfig);
+
+
 }
 
 
@@ -847,7 +872,10 @@ void CKBChatServerDlg::SendCheckConfig()
 	sCmd.Format(_T("%d"), API_CHECK_CONFIG);
 	APICALLDATA* pData = new APICALLDATA;
 	pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
-	location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+	if (m_ConfigInfo.agent_type == AGENT_RESOURCE)
+		location_code.Format(_T("%s"), _T("00"));
+	else
+		location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
 	pData->insert(APICALLDATA::value_type(_location_code, location_code));
 	g_pApiAgentDlg->AddAPI(pData);
 }
@@ -1376,6 +1404,12 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 		CheckIncident();
 		SetTimer(TIMER_INCIDENT, 30000, NULL);
 	}
+	else if (nIDEvent == TIMER_RESOURCE)
+	{
+		KillTimer(TIMER_RESOURCE);
+		CheckResource();
+		SetTimer(TIMER_RESOURCE, m_ConfigInfo.data_upload_second, NULL);
+	}
 
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -1454,4 +1488,48 @@ CString CKBChatServerDlg::GetIpAddress()
 	}
 	return strIP;
 
+}
+
+void CKBChatServerDlg::Init_Cpu() {
+	PdhOpenQuery(NULL, NULL, &cpuQuery);
+	PdhAddCounter(cpuQuery, L"\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal);
+	PdhCollectQueryData(cpuQuery);
+}
+
+double CKBChatServerDlg::getCpuCurrentValue() {
+	PDH_FMT_COUNTERVALUE counterVal;
+
+	PdhCollectQueryData(cpuQuery);
+	PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
+	return counterVal.doubleValue;
+}
+
+
+void CKBChatServerDlg::CheckResource()
+{
+	CString sCmd, ipaddress, cpu_value, ram_avail_value, ram_phys_value;
+	int availableMem , physicalMem = 0;
+	getRAMStatus(availableMem, physicalMem);
+	sCmd.Format(_T("%d"), API_RESOURCE);
+	ipaddress = GetIpAddress();
+	APICALLDATA* pData = new APICALLDATA;
+	pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+	pData->insert(APICALLDATA::value_type(_ipaddress, ipaddress));
+	cpu_value.Format(_T("%.1f"), getCpuCurrentValue());
+	pData->insert(APICALLDATA::value_type(_cpu_value, cpu_value));
+	ram_avail_value.Format(_T("%d"), availableMem);
+	pData->insert(APICALLDATA::value_type(_ram_avail_value, ram_avail_value));
+	ram_phys_value.Format(_T("%d"), physicalMem);
+	pData->insert(APICALLDATA::value_type(_ram_phys_value, ram_phys_value));
+	g_pApiAgentDlg->AddAPI(pData);
+}
+
+void CKBChatServerDlg::getRAMStatus(int& availableMem, int& physicalMem) {
+	//메모리값
+	MEMORYSTATUSEX MemoryStatus = { 0 };
+	MemoryStatus.dwLength = sizeof(MemoryStatus);
+	::GlobalMemoryStatusEx(&MemoryStatus);
+
+	availableMem = (int)((MemoryStatus.ullTotalPhys - MemoryStatus.ullAvailPhys) / (1024 * 1024));
+	physicalMem = (int)((MemoryStatus.ullTotalPhys) / (1024 * 1024));
 }

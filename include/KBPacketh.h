@@ -27,6 +27,7 @@
 #define SOCK_CMD_CHAT_MSG_RECORVERY	30008
 enum LOGTYPE { LOG_CONNECT = 0, LOG_LOGIN, LOG_LEAVE, LOG_SOCKCLOSE, LOG_CHANNELMAKE, LOG_JOIN, LOG_CHECK, LOG_PING , LOG_SEND
 };
+enum AGENT_TYPE{AGENT_SENSOR=1,AGENT_RESOURCE=2};
 
 float Hex2float(char* hexadecimal);
 int char2Int(char c);
@@ -497,6 +498,7 @@ public:
 		server_ip = _T("localhost");
 		port = 5000;
 		web_port = 8080;
+		agent_type = AGENT_SENSOR;
 	};
 	CString locationname;
 	CString locationcode;
@@ -518,6 +520,7 @@ public:
 	CString server_ip;
 	int port;
 	int web_port;
+	AGENT_TYPE agent_type;
 };
 
 
@@ -678,11 +681,46 @@ static int char2Int(char c)
 	return (int)c - 48;
 }
 
-
-
+/*
 static float GetGenValue(float time, float amplitude)
 {
 	float retData = float(200.0 * sin(time) * 0.1 + 30.0 + amplitude);
+	return retData;
+
+}
+*/
+static float GetGenValue(float time, float amplitude)
+{
+	float s_value = 22.1;
+	float o_value = 0;
+	float offset = 0.1;
+	if ((int)time % 2 == 0)
+		offset = -0.1;
+	else
+		offset = 0.1;
+	if((int)time % 192 == 0)
+		offset = 2.0;
+	else if ((int)time % 193 == 0)
+		offset = 3.0;
+	else if ((int)time % 194 == 0)
+		offset = 4.0;
+	else if ((int)time % 195 == 0)
+		offset = 5.0;
+	else if ((int)time % 196 == 0)
+		offset = 6.0;
+	else if ((int)time % 197 == 0)
+		offset = 7.0;
+	else if ((int)time % 198 == 0)
+		offset = 8.0;
+	else if ((int)time % 199 == 0)
+		offset = 9.0;
+	else if ((int)time % 200 == 0)
+	{
+		offset = 20.0;
+		s_value = 20.1;
+	}
+
+	float retData = s_value + offset;
 	return retData;
 
 }
