@@ -31,7 +31,7 @@ enum AGENT_TYPE{AGENT_SENSOR=1,AGENT_RESOURCE=2};
 
 float Hex2float(char* hexadecimal);
 int char2Int(char c);
-float GetGenValue(float time, float amplitude);
+float GetGenValue(float time, float amplitude, int sensor_type);
 float GetGenValue2(float time, float amplitude);
 
 class KBPKT_HDR
@@ -689,7 +689,7 @@ static float GetGenValue(float time, float amplitude)
 
 }
 */
-static float GetGenValue(float time, float amplitude)
+static float GetGenValue(float time, float amplitude,int sensor_type)
 {
 	float s_value = 22.1;
 	float o_value = 0;
@@ -725,13 +725,28 @@ static float GetGenValue(float time, float amplitude)
 
 }
 
-static float GetGenValue2(float time,float amplitude)
+static float GetGenValue2(float time,float amplitude, int sensor_type)
 {
+
+
 	float value = 0.0;
 	float frequency = 1.0;
 	float phase = 2.0;
 	float invert = 1.0;
 	float offset = 2.0;
+
+	switch (sensor_type)
+	{
+	case 1:  offset = offset + (float)10.0; break;
+	case 2:  offset = offset - (float)10.0; break;
+	case 3:  offset = offset + (float)20.0; break;
+	case 4:  offset = offset - (float)20.0; break;
+	case 5:  offset = offset + (float)30.0; break;
+	case 6:  offset = offset - (float)30.0; break;
+	case 7:  offset = offset + (float)40.0; break;
+	case 8:  offset = offset - (float)40.0; break;
+	}
+
 	float t = frequency * time + phase;
 	value = (float)sin(20.0 * 3.14195 * t);
 	float retData = (invert * amplitude * value + offset);

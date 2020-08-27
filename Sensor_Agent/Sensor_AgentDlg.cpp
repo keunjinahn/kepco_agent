@@ -345,7 +345,7 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			return;
 		}
-		StartCollectionServer();
+		//StartCollectionServer();
 		SetTimer(TIMER_KCOLLECTION_CHECK,10000,NULL);
 	}
 	else if (nIDEvent == TIMER_KCOLLECTION_RESOURCE_CHECK)
@@ -576,7 +576,8 @@ void CSensorAgentDlg::OnBnClickedBtnDll()
 	USES_CONVERSION;
 	CString strMenuItem;
 	POSITION pos = m_listShopSendCtrl.GetFirstSelectedItemPosition();
-	if (pos) {
+	while (pos) 
+	{
 		int iSel = m_listShopSendCtrl.GetNextSelectedItem(pos);
 		CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(iSel);
 		if (!pShopInfo)
@@ -627,15 +628,15 @@ void CSensorAgentDlg::SendShopData()
 			{
 				CShopInfo* pShopInfo = (CShopInfo*)m_listShopSendCtrl.GetItemData(i);
 
-				pShopInfo->m_objData.temp_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_1_value);
-				pShopInfo->m_objData.temp_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_2_value);
-				pShopInfo->m_objData.temp_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_3_value);
-				pShopInfo->m_objData.temp_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_4_value);
+				pShopInfo->m_objData.temp_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_1_value,1);
+				pShopInfo->m_objData.temp_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_2_value,2);
+				pShopInfo->m_objData.temp_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_3_value,3);
+				pShopInfo->m_objData.temp_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.temp_4_value,4);
 
-				pShopInfo->m_objData.humi_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_1_value);
-				pShopInfo->m_objData.humi_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_2_value);
-				pShopInfo->m_objData.humi_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_3_value);
-				pShopInfo->m_objData.humi_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_4_value);
+				pShopInfo->m_objData.humi_1_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_1_value,5);
+				pShopInfo->m_objData.humi_2_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_2_value,6);
+				pShopInfo->m_objData.humi_3_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_3_value,7);
+				pShopInfo->m_objData.humi_4_value = m_pHostWnd[i].GetSendValue(pShopInfo->m_objData.humi_4_value,8);
 				strSubKey.Format(_T("sensor_%d"), i + 1);
 
 				strValue.Format(_T("%s"), pShopInfo->m_objData.getData());

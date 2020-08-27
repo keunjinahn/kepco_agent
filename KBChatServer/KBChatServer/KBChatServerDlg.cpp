@@ -693,7 +693,7 @@ void CKBChatServerDlg::LoadConfig()
 	strKey = GetIpAddress();
 
 #ifdef _DEBUG
-		strKey = _T("70.112.1.187");
+		//strKey = _T("70.112.1.187");
 #endif
 
 	::GetPrivateProfileString(strKey, _T("locationname"), _T("UNKNOWN"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
