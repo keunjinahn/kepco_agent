@@ -1,0 +1,91 @@
+﻿  tif_xfile.cpp
+  ximabmp.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximabmp.cpp(294,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximadsp.cpp
+  ximaenc.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(70,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(75,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(104,13): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(138,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(170,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(182,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(218,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(254,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(266,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(278,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(290,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(348,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(395,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(400,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(416,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(492,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(506,29): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(481,14): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(498,13): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(575,9): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(720,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(747,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(761,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(815,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(828,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(841,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(854,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaenc.cpp(915,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximaexif.cpp
+  xImage.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\xImage.cpp(156,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\xImage.cpp(168,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\xImage.cpp(202,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximagif.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximagif.cpp(440,4): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximagif.cpp(806,26): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximagif.cpp(1262,22): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximagif.cpp(1265,23): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximahist.cpp
+  ximaico.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaico.cpp(203,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaico.cpp(229,9): warning C4838: 'int'에서 'DWORD'(으)로의 변환에는 축소 변환이 필요합니다.
+  ximainfo.cpp
+  ximaint.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximaint.cpp(661,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+  ximaj2k.cpp
+  ximajas.cpp
+  ximajbg.cpp
+  ximajpg.cpp
+  ximalpha.cpp
+  ximalyr.cpp
+  ximamng.cpp
+  ximapal.cpp
+  ximapcx.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximapcx.cpp(143,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximapcx.cpp(292,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  코드를 생성하고 있습니다...
+  컴파일하고 있습니다...
+  ximapng.cpp
+  ximasel.cpp
+  ximatga.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximatga.cpp(106,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximatga.cpp(119,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximath.cpp
+  ximatif.cpp
+  ximatran.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximatran.cpp(2290,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximawbmp.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawbmp.cpp(45,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawbmp.cpp(59,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximawmf.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(106,4): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(117,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(123,3): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(164,6): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(192,5): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawmf.cpp(430,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  ximawnd.cpp
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawnd.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawnd.cpp(385,13): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawnd.cpp(850,3): warning C4996: '_tcsncpy': This function or variable may be unsafe. Consider using _tcsncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawnd.cpp(1092,5): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\ximawnd.cpp(1104,5): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  xmemfile.cpp
+  코드를 생성하고 있습니다...
+  CxImage.vcxproj -> D:\project\kepco\desktop\LibSrc\cximage599c_lite\CxImage\.\Release\CxImage.lib
