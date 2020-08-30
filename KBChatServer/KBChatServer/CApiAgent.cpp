@@ -446,7 +446,7 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 			g_pServerDlg->m_ConfigInfo.data_upload_second = itemJson.get("data_upload_second", "").asInt();
 
 			if (agent_ver.GetLength() > 1
-				&& AGENT_VERSION != agent_ver)
+				&& AGENT_VERSION_RESOURCE != agent_ver)
 			{
 				CString sCmd;
 				sCmd.Format(_T("%d"), API_DOWNLOAD_FILE);
@@ -455,7 +455,7 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 				CString strUrl = _T("");
 				//strUrl.Format(_T("http://%s:%d\\download\\%s"), g_pServerDlg->m_ConfigInfo.server_ip, g_pServerDlg->m_ConfigInfo.web_port, RUN_APP_NAME);
 				//strUrl.Format(_T("http://%s:%d\\download\\%s"),_T("203.241.124.20"),443, RUN_APP_NAME);
-				strUrl.Format(_T("download\\%s"), RUN_APP_NAME);
+				strUrl.Format(_T("download\\%s"), RUN_APP_NAME_RESOURCE);
 				pData->insert(APICALLDATA::value_type(_T("DOWNLOAD_URL"), strUrl));
 				pData->insert(APICALLDATA::value_type(_T("FILE_NAME"), RUN_APP_NAME));
 				g_pApiAgentDlg->AddAPI(pData);
@@ -463,7 +463,6 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 
 		}
 		g_pServerDlg->m_bWasServerConnected = TRUE;
-
 	}
 }
 

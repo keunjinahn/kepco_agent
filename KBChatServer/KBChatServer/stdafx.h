@@ -105,7 +105,9 @@ enum API_CMD {
 #define RETURN_NOT_AREA_CODE 409
 
 #define RUN_APP_NAME  _T("KCollectionServer_setup.exe")
+#define RUN_APP_NAME_RESOURCE  _T("KCollectionResource_setup.exe")
 #define AGENT_VERSION _T("1.0.2")
+#define AGENT_VERSION_RESOURCE _T("1.0.2")
 
 #include <afxtempl.h>
 	#define _ATL_APARTMENT_THREADED
