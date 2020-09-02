@@ -131,7 +131,7 @@ BOOL CKBChatServerDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	g_pServerDlg = this;
-
+	
 	/*
 	int num = 64302;
 	char hex[20];

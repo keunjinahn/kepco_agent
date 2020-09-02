@@ -36,6 +36,8 @@ public :
 	void CreateLog();
 	CString GetProgramPathW();
 	Log AppLog;
+	CString m_strDocumentPath;
+	CString GetDocumentPath();
 };
 
 extern CKBChatServerApp theApp;

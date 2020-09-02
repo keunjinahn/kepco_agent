@@ -26,6 +26,10 @@ CKBChatServerApp::CKBChatServerApp()
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 	// TODO: 여기에 생성 코드를 추가합니다.
 	// InitInstance에 모든 중요한 초기화 작업을 배치합니다.
+	TCHAR szPath[512] = { 0 };
+	SHGetSpecialFolderPath(NULL, szPath, CSIDL_PERSONAL, FALSE);
+	m_strDocumentPath.Format(_T("%s\\KCollectionServer"), szPath);
+	CreateDirectoryW(m_strDocumentPath, 0);
 }
 
 
@@ -215,6 +219,12 @@ BOOL CKBChatServerApp::InitATL()
 }
 
 
+CString CKBChatServerApp::GetDocumentPath()
+{
+	return m_strDocumentPath;
+}
+
+
 CString CKBChatServerApp::GetProgramPathW()
 {
 	USES_CONVERSION;
@@ -238,7 +248,7 @@ CString CKBChatServerApp::GetProgramPathW()
 void CKBChatServerApp::CreateLog()
 {
 	CString strLogPath;
-	strLogPath.Format(_T("%s"), GetProgramPathW());
+	strLogPath.Format(_T("%s"), GetDocumentPath());
 	CreateDirectory(strLogPath, NULL);
 	CTime t = CTime::GetCurrentTime();
 	m_strAppLogFile.Format(_T("%s\\KCollection_Log_%04d%02d%02d.log"), strLogPath, t.GetYear(), t.GetMonth(), t.GetDay());
