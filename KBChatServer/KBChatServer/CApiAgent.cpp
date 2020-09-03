@@ -279,7 +279,7 @@ CString CApiAgent::GetHttpQuery(CString strIP, int nPort, CString strUrl,CString
 		if (hRequest != NULL)
 		{
 			HttpAddRequestHeaders(hRequest, _T("Content-Type: application/json\r\n"), -1, HTTP_ADDREQ_FLAG_ADD);
-			theApp.AppLog.WriteString(strParams);
+			//theApp.AppLog.WriteString(strParams);
 			bResult = HttpSendRequest(hRequest, NULL, 0, W2A(strParams), strlen(W2A(strParams)));
 		}
 	}
