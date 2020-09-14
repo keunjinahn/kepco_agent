@@ -973,6 +973,7 @@ void CKBChatServerDlg::CheckIncident()
 				pData->insert(APICALLDATA::value_type(_level, level));
 				g_pApiAgentDlg->AddAPI(pData);
 			}
+			/*
 			CHECKRESULT _checkResult_4 = CHECK_NORMAL;
 
 			DWORD dwDiffSecond = pShopInfo->m_current_date - pShopInfo->m_last_updated_date;
@@ -1020,6 +1021,7 @@ void CKBChatServerDlg::CheckIncident()
 					pShopInfo->m_bIncident = FALSE;
 				}
 			}
+			*/
 		}
 	}
 }
