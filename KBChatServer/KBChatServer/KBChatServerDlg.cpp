@@ -779,6 +779,9 @@ void CKBChatServerDlg::ShowLoginDlg()
 void CKBChatServerDlg::SendSensorData()
 {
 
+	if (m_ConfigInfo.enable_upload != 1)
+		return;
+
 	CString sCmd, mac, location_code, device_no, sensor_state, leak_1_value, leak_2_value
 		, temp_1_value, temp_2_value, temp_3_value, temp_4_value, humi_1_value, humi_2_value, humi_3_value, humi_4_value;
 
@@ -890,6 +893,8 @@ void CKBChatServerDlg::LogMessage(LOGTYPE typeLog, CString strMsg)
 
 void CKBChatServerDlg::CheckIncident()
 {
+	if (m_ConfigInfo.enable_upload != 1)
+		return;
 	for (int i = 0; i < m_ConfigInfo.m_pShowList->GetCount(); i++)
 	{
 		float resultValue = 0;
@@ -1398,7 +1403,7 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		KillTimer(TIMER_CHECK_CONFIG);
 		SendCheckConfig();
-		SetTimer(TIMER_CHECK_CONFIG, 30000, NULL);
+		SetTimer(TIMER_CHECK_CONFIG, m_ConfigInfo.config_check_second, NULL);
 	}
 	else if (nIDEvent == TIMER_INCIDENT)
 	{

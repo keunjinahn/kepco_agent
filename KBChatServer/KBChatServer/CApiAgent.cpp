@@ -373,6 +373,8 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 		agent_ver.Format(_T("%s"), A2W(itemJson.get("agent_ver", "").asString().c_str()));
 
 		g_pServerDlg->m_ConfigInfo.data_upload_second = itemJson.get("data_upload_second", "").asInt();
+		g_pServerDlg->m_ConfigInfo.enable_upload = itemJson.get("enable_upload", "").asInt();
+		g_pServerDlg->m_ConfigInfo.config_check_second = itemJson.get("config_check_second", "").asInt();
 		g_pServerDlg->m_ConfigInfo.humi_R01_enable = itemJson.get("humi_R01_enable", "").asBool();
 		g_pServerDlg->m_ConfigInfo.leak_R01_enable = itemJson.get("leak_R01_enable", "").asBool();
 		g_pServerDlg->m_ConfigInfo.temp_R01_enable = itemJson.get("temp_R01_enable", "").asBool();

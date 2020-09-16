@@ -483,7 +483,7 @@ public:
 	CConfigInfo()
 	{
 		m_pShowList = new CPtrList();
-		data_upload_second = 1000;
+		
 		humi_R01_error = 100;
 		humi_R01_warning = 90;
 		leak_R01_error = 1;
@@ -499,13 +499,15 @@ public:
 		port = 5000;
 		web_port = 8080;
 		agent_type = AGENT_SENSOR;
+		config_check_second = 30000;
+		enable_upload = 1;
+		data_upload_second = 1000;
 	};
 	CString locationname;
 	CString locationcode;
 	CStringList listShop;
 	CStringList listShopMac;
 	CPtrList* m_pShowList;
-	int data_upload_second;
 	BOOL leak_R01_enable;
 	BOOL temp_R01_enable;
 	BOOL humi_R01_enable;
@@ -521,6 +523,9 @@ public:
 	int port;
 	int web_port;
 	AGENT_TYPE agent_type;
+	int config_check_second;
+	int enable_upload;
+	int data_upload_second;
 };
 
 
