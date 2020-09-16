@@ -352,7 +352,7 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		KillTimer(TIMER_KCOLLECTION_RESOURCE_CHECK);
 
-		//StartCollectionResourceServer();
+		StartCollectionResourceServer();
 
 		SetTimer(TIMER_KCOLLECTION_RESOURCE_CHECK, 30000, NULL);
 	}
