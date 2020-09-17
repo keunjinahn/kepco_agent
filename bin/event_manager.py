@@ -38,6 +38,7 @@ if SERVER_MODE is True :
     ZUSI_TBS = b"ZUSI:TBS;\r\n"
     ZUSI_ET = b"ZUSI:ET;\r\n"
     ZPAL_TSL = b"ZPAL::TSL;\r\n"
+    ZAHO = b"ZAHO;\r\n"
     ZDTF_TTRX = b"ZDTF:TTRX;\r\n"
     EXIT = b"ZZZ;\r\n"
 else :

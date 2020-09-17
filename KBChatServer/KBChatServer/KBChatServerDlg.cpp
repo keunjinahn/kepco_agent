@@ -452,6 +452,7 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		InvalidateRect(g_rectSensorInfoArea,FALSE);
 	for (int i = 0; i < SHOP_INFO_COUNT; i++)
 		InvalidateRect(g_rectListItemInfo[i], FALSE);
+
 }
 
 
@@ -479,9 +480,15 @@ CAreaInfo* CKBChatServerDlg::GetAreaInfo(CString srcMac)
 		CAreaInfo* pAreaInfo = (CAreaInfo*)m_listArea.GetNext(pos);
 		CString destMac;
 		destMac.Format(_T("%s"), pAreaInfo->mac);
+		/*
+		CString strMsg;
+		strMsg.Format(_T("destMac mac : %s,src mac : %s",), destMac.TrimLeft(), srcMac.TrimLeft());
+		theApp.AppLog.Write(_T("%s"), strMsg);
+		*/
 		if (destMac == srcMac)
 			return pAreaInfo;
 	}
+
 	return NULL;
 }
 
@@ -1200,9 +1207,11 @@ CString converValueSensor(float fValue)
 
 CFont* CKBChatServerDlg::DrawSensorInfo(CMemDC_ *pDC)
 {
+	//pDC->DrawText(_T("111"), CRect(194, 37, 1200, 57), DT_CENTER | DT_TOP | DT_SINGLELINE);
 	CFont* pOldFont = pDC->SelectObject(&m_fontSensorValue);
 	if (m_pCurShopInfo != NULL)
 	{
+		//pDC->DrawText(_T("222"), CRect(194, 57, 1200, 57), DT_CENTER | DT_TOP | DT_SINGLELINE);
 		pDC->SetTextColor(RGB(200, 200, 200));
 		CString leak_1_value;
 		leak_1_value.Format(_T("%d"), m_pCurShopInfo->m_objData.leak_1_value);
@@ -1218,6 +1227,8 @@ CFont* CKBChatServerDlg::DrawSensorInfo(CMemDC_ *pDC)
 		temp_1_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_1_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_1_value, SENSOR_TEMP, pDC, &m_rectSensor[0]);
 		pDC->DrawText(temp_1_value, m_rectSensor[0], DT_CENTER | DT_TOP | DT_SINGLELINE);
+		//pDC->DrawText(temp_1_value, CRect(666, 17, 1200, 57), DT_CENTER | DT_TOP | DT_SINGLELINE);
+		//pDC->DrawText(temp_1_value, CRect(363, 213, 413, 233), DT_CENTER | DT_TOP | DT_SINGLELINE);
 		CString temp_2_value;
 		temp_2_value.Format(_T("%s"), converValueSensor(m_pCurShopInfo->m_objData.temp_2_value));
 		CheckValueDC(m_pCurShopInfo->m_objData.temp_2_value, SENSOR_TEMP, pDC, &m_rectSensor[1]);

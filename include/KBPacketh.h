@@ -225,6 +225,7 @@ public:
 		memcpy(strMac, pHdr->mac, 12);
 		strMac[12] = '\0';
 		mac.Format(_T("%s"), A2W(strMac));
+		mac = mac.TrimLeft();
 		char strDeviceNo[3];
 		memcpy(strDeviceNo, pPkt->device_no, 2);
 		strDeviceNo[2] = '\0';
