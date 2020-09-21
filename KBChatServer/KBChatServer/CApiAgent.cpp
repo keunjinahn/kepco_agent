@@ -406,7 +406,7 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 			last_updated_date.Format(_T("%s"), A2W(itemJson.get("last_updated_date", "").asString().c_str()));
 			CAreaInfo* pAreaInfo = new CAreaInfo();
 			pAreaInfo->strShopName = shop_name;
-			pAreaInfo->mac = mac;
+			pAreaInfo->mac = mac.Trim();
 			CShopInfo* pShopInfo = g_pServerDlg->GetShopInfo(mac);
 			if (pShopInfo == NULL)
 			{
