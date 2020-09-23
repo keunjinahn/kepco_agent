@@ -36,15 +36,12 @@ Section "전체 프로그램 설치" SEC01
 
   SetOutPath "$INSTDIR"
   SetOverwrite on
-  File ".\bin\KCollectionServer.exe"
   File ".\bin\Sensor_Agent.exe"
-  File ".\bin\libmariadb.dll"
   File ".\bin\icon.ico"
   File ".\config.ini"
   File ".\bin\config_agent.ini"
   File ".\bin\uninstall.ico"
-  File ".\bin\event_manager.py"
-  File ".\bin\event_manager.pyc"
+  File ".\bin\res_manager.py"
   File ".\bin\python27.dll"
   File ".\bin\python.exe"
   File ".\bin\pythonw.exe"
@@ -57,9 +54,6 @@ Section "전체 프로그램 설치" SEC01
 
   SetOutPath "$SYSDIR\EnTmp"
   File ".\vc_redist.x64.exe"
-
-  SetOutPath "$INSTDIR\info"
-  File /r ".\bin\info\*"
 
   SetOutPath "$INSTDIR\..\dlls"
   File /r ".\dlls\*"

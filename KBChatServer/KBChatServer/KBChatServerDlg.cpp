@@ -172,29 +172,13 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	}
 	LoadConfig();
 	InitControl();
-
-	if (m_ConfigInfo.agent_type == AGENT_SENSOR)
-	{
-		MoveWindow(CRect(0, 0, 1283, 869));
-		CenterWindow();
-		SetTimer(TIMER_ACTIVE_LAMP, 500, NULL);
-		SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
-		SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
-		SetTimer(TIMER_INCIDENT, 1000, NULL);
-	}
-	else if (m_ConfigInfo.agent_type == AGENT_RESOURCE)
-	{
-		Init_Cpu();
-		SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
-		SetTimer(TIMER_RESOURCE, 1000, NULL);
-
-		UINT nStyle = 0;
-		nStyle |= WS_MAXIMIZEBOX;
-		nStyle |= WS_MINIMIZEBOX;
-		ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
-
-		MoveWindow(CRect(0, 0, 0, 0));
-	}
+	MoveWindow(CRect(0, 0, 1283, 869));
+	CenterWindow();
+	SetTimer(TIMER_ACTIVE_LAMP, 500, NULL);
+	SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
+	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
+	SetTimer(TIMER_INCIDENT, 1000, NULL);
+	
 	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));  // Icon to use
 	if (!m_TrayIcon.Create(
 		NULL,                            // Let icon deal with its own messages
@@ -882,10 +866,13 @@ void CKBChatServerDlg::SendCheckConfig()
 	sCmd.Format(_T("%d"), API_CHECK_CONFIG);
 	APICALLDATA* pData = new APICALLDATA;
 	pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
+	/*
 	if (m_ConfigInfo.agent_type == AGENT_RESOURCE)
 		location_code.Format(_T("%s"), _T("00"));
 	else
 		location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
+	*/
+	location_code.Format(_T("%s"), m_ConfigInfo.locationcode);
 	pData->insert(APICALLDATA::value_type(_location_code, location_code));
 	g_pApiAgentDlg->AddAPI(pData);
 }
@@ -1424,9 +1411,11 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == TIMER_RESOURCE)
 	{
+		/*
 		KillTimer(TIMER_RESOURCE);
 		CheckResource();
 		SetTimer(TIMER_RESOURCE, m_ConfigInfo.data_upload_second, NULL);
+		*/
 	}
 
 	CDialogEx::OnTimer(nIDEvent);

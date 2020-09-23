@@ -128,7 +128,7 @@ class EventManager(object):
             # self.kepco_server_info['tbms_server_user_pass'] = 'kwkepcose[9470'
             # self.sleep_seconds = int(self.kepco_server_info['sleep_seconds']) / 1000
             #self.sleep_seconds = int(self.kepco_server_info['sleep_seconds']) / 1000
-            # self.Log(str(self.kepco_server_info))
+            self.Log(str(self.kepco_server_info))
         except:
             self.Log("get_server_info Exception")
 
@@ -401,7 +401,7 @@ class EventManager(object):
             # print("DB_INFO_MODULE :",DB_INFO_MODULE)
             info = db_info
             print("start")
-            self.cnxn = pyodbc.connect(DB_INFO_MODULE)
+            self.cnxn = pyodbc.connect(DB_INFO_MODULE,unicode_results=True)
             print("connected...")
             cursor = self.cnxn.cursor()
             self.Log('Database connected.')
@@ -434,7 +434,8 @@ class EventManager(object):
             return False
         cursor = self.cursor()
         try :
-            sql = "select top 20 A.*,B.ALARM_NM,B.ALARM_CLASS, C.TBS_NM, C.IP_ADDR from RTU_ALARM AS A JOIN ALARM_CODE AS B ON A.ALARM_CD=B.ALARM_CD LEFT JOIN RTU_INFO AS C ON A.RTU_ID=C.RTU_ID ORDER BY A.OCCR_DTM DESC"
+            # sql = "select top 20 A.*,B.ALARM_NM,B.ALARM_CLASS, C.TBS_NM, C.IP_ADDR from RTU_ALARM AS A JOIN ALARM_CODE AS B ON A.ALARM_CD=B.ALARM_CD LEFT JOIN RTU_INFO AS C ON A.RTU_ID=C.RTU_ID ORDER BY A.OCCR_DTM DESC"
+            sql = "select '2020-09-23 12:00:00' as OCCR_DTM,TBS_NM from RTU_INFO"
             cursor.execute(sql)
             recv_data = [dict(zip(zip(*cursor.description)[0], row)) for row in cursor.fetchall()]
             for recv in recv_data:
@@ -450,41 +451,49 @@ class EventManager(object):
         return tbms_event_list
 
     def run(self):
-        try:
-            self.Log('EVENT COLLECTION START....')
-            self.get_server_info()
-            trs_event_info_list = []
-            tdis_event_info_list = []
-            tbms_event_info_list = []
-            if int(self.kepco_server_info['tdis_tbms_change']) == 1:
-                if int(self.kepco_server_info['trs_check']) == 1 :
-                    trs_event_info_list = self.get_trs_event()
-                if int(self.kepco_server_info['tdis_check']) == 1 :
-                    tdis_event_info_list = self.get_tdis_event()
-                if int(self.kepco_server_info['tbms_check']) == 1 :
-                    tdis_event_info_change = self.get_tdis_event_change()
-                    for event in tdis_event_info_change:
-                        tdis_event_info_list.append(event)
-            else :
-                if int(self.kepco_server_info['trs_check']) == 1 :
-                    trs_event_info_list = self.get_trs_event()
-                if int(self.kepco_server_info['tdis_check']) == 1 :
-                    tdis_event_info_list = self.get_tdis_event()
-                if int(self.kepco_server_info['tbms_check']) == 1 :
-                    tbms_event_info_list = self.get_tbms_event()
-            keop_event_info = {
-                "trs_event": json.dumps(trs_event_info_list),
-                "tdis_event":json.dumps(tdis_event_info_list),
-                "tbms_event":json.dumps(tbms_event_info_list)
-            }
-            dataobj = json.dumps(keop_event_info)
-            servers_url = self.get_server_ip() + "/api/v1/agent/kepco_event_send"
-            r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
-            data = json.loads(r.text)
-            self.Log(str(data))
-            self.Log('EVENT COLLECTION END....')
-        except :
-            self.Log('Exception run')
+        # try:
+        self.Log('EVENT COLLECTION START....')
+        self.get_server_info()
+        trs_event_info_list = []
+        tdis_event_info_list = []
+        tbms_event_info_list = []
+        # if int(self.kepco_server_info['tdis_tbms_change']) == 1:
+        #     if int(self.kepco_server_info['trs_check']) == 1 :
+        #         trs_event_info_list = self.get_trs_event()
+        #     if int(self.kepco_server_info['tdis_check']) == 1 :
+        #         tdis_event_info_list = self.get_tdis_event()
+        #     if int(self.kepco_server_info['tbms_check']) == 1 :
+        #         tdis_event_info_change = self.get_tdis_event_change()
+        #         for event in tdis_event_info_change:
+        #             tdis_event_info_list.append(event)
+        # else :
+        #     if int(self.kepco_server_info['trs_check']) == 1 :
+        #         trs_event_info_list = self.get_trs_event()
+        #     if int(self.kepco_server_info['tdis_check']) == 1 :
+        #         tdis_event_info_list = self.get_tdis_event()
+        #     if int(self.kepco_server_info['tbms_check']) == 1 :
+        #         tbms_event_info_list = self.get_tbms_event()
+        # keop_event_info = {
+        #     "trs_event": json.dumps(trs_event_info_list),
+        #     "tdis_event":json.dumps(tdis_event_info_list),
+        #     "tbms_event":json.dumps(tbms_event_info_list)
+        # }
+        if int(self.kepco_server_info['tbms_check']) == 1 :
+            tbms_event_info_list = self.get_tbms_event()
+        print("tbms_event_info_list : ",tbms_event_info_list)
+        keop_event_info = {
+            "trs_event": json.dumps([]),
+            "tdis_event":json.dumps([]),
+            "tbms_event":json.dumps(tbms_event_info_list,ensure_ascii = False,encoding='latin1')
+        }
+        dataobj = json.dumps(keop_event_info)
+        servers_url = self.get_server_ip() + "/api/v1/agent/kepco_event_send"
+        r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
+        data = json.loads(r.text)
+        self.Log(str(data))
+        self.Log('EVENT COLLECTION END....')
+        # except :
+        #     self.Log('Exception run')
         # while self.is_running:
         #     try:
         #         self.Log('EVENT COLLECTION START....')

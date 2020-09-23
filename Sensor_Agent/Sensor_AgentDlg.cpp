@@ -17,7 +17,8 @@
 
 #define TIMER_SEND_INTERVAL 1000
 #define TIMER_KCOLLECTION_CHECK 1
-#define TIMER_KCOLLECTION_RESOURCE_CHECK 2
+#define TIMER_START_EVENT_MANAGER 2
+#define TIMER_START_RES_MANAGER 3
 
 
 DWORD	g_platform_id;
@@ -167,7 +168,7 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	SetDlgItemTextW(IDC_EDT_SERVER_PORT, strPort);
 	SetDlgItemTextW(IDC_EDT_PROFILE, _T("0"));
 	
-	LoadConfig();
+	//LoadConfig();
 	LoadAgentConfig();
 
 	((CButton*)GetDlgItem(IDC_RADIO_TCP))->SetCheck(TRUE);
@@ -197,10 +198,15 @@ BOOL CSensorAgentDlg::OnInitDialog()
 	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
 	
 	MoveWindow(0, 0, 0, 0);
-	SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
+	
 	if (m_typeAgent == AGENT_SENSOR)
 	{
-		SetTimer(TIMER_KCOLLECTION_RESOURCE_CHECK, 1000, NULL);
+		SetTimer(TIMER_KCOLLECTION_CHECK, 1000, NULL);
+		SetTimer(TIMER_START_EVENT_MANAGER, 1000, NULL);
+	}
+	else
+	{
+		SetTimer(TIMER_START_RES_MANAGER, 1000, NULL);
 	}
 	SetAutoStart(TRUE);
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -298,6 +304,10 @@ void CSensorAgentDlg::LoadAgentConfig()
 	CString strKey = _T("INFO");
 	CString strValue;
 	char sValue[1024];
+
+	::GetPrivateProfileString(strKey, _T("agent_type"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+	m_typeAgent = (AGENT_TYPE)_wtoi(strValue);
+
 	::GetPrivateProfileString(strKey, _T("count"), _T("6"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
 	int nCount = _wtoi(strValue);
 	CString sNum;
@@ -348,13 +358,21 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 		//StartCollectionServer();
 		SetTimer(TIMER_KCOLLECTION_CHECK,10000,NULL);
 	}
-	else if (nIDEvent == TIMER_KCOLLECTION_RESOURCE_CHECK)
+	else if (nIDEvent == TIMER_START_EVENT_MANAGER)
 	{
-		KillTimer(TIMER_KCOLLECTION_RESOURCE_CHECK);
+		KillTimer(TIMER_START_EVENT_MANAGER);
 
-		StartCollectionResourceServer();
+		StartEventManager();
 
-		SetTimer(TIMER_KCOLLECTION_RESOURCE_CHECK, 30000, NULL);
+		SetTimer(TIMER_START_EVENT_MANAGER, 30000, NULL);
+	}
+	else if (nIDEvent == TIMER_START_RES_MANAGER)
+	{
+		KillTimer(TIMER_START_RES_MANAGER);
+
+		StartEventManager();
+
+		SetTimer(TIMER_START_RES_MANAGER, 30000, NULL);
 	}
 	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
@@ -698,51 +716,21 @@ void CSensorAgentDlg::StartCollectionServer()
 		WinExec(W2A(RUN_APP_NAME), SW_SHOW);
 }
 
-void CSensorAgentDlg::StartCollectionResourceServer()
+void CSensorAgentDlg::StartEventManager()
 {
 	USES_CONVERSION;
 
 	CString sRunCmd;
-	sRunCmd.Format(_T("%s\\python.exe %s"), GetProgramPathW(), RUN_RESOURCE_PYC_NAME);
+	sRunCmd.Format(_T("%s\\python.exe %s"), GetProgramPathW(), RUN_EVENT_PYC_NAME);
+	WinExec(W2A(sRunCmd), SW_HIDE);
+}
 
-	/*
-	PROCESS_INFORMATION ProcessInfo;
-	TCHAR runPath[MAX_PATH];
-	CString strDestFile;
-	wsprintf(runPath, _T("%s\\python.exe %s"), GetProgramPathW(), RUN_RESOURCE_PYC_NAME);
+void CSensorAgentDlg::StartResManager()
+{
+	USES_CONVERSION;
 
-	STARTUPINFO si;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_SHOW;
-	ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
-
-
-	if ((int)ShellExecute(NULL, _T("open"), runPath, NULL, NULL, SW_SHOWNORMAL) > 32)
-	{
-		return;
-	}
-	else
-		return;
-
-	if (!CreateProcessW(NULL, runPath, NULL, NULL, FALSE,
-		CREATE_NEW_CONSOLE,
-		NULL,
-		NULL,
-		&si,
-		&ProcessInfo))
-	{
-		if ((int)ShellExecute(NULL, _T("open"), runPath, NULL, NULL, SW_SHOWNORMAL) > 32)
-		{
-			return ;
-		}
-		else
-			return ;
-	}
-	*/
-
-
+	CString sRunCmd;
+	sRunCmd.Format(_T("%s\\python.exe %s"), GetProgramPathW(), RUN_RES_PYC_NAME);
 	WinExec(W2A(sRunCmd), SW_HIDE);
 }
 
@@ -1150,15 +1138,6 @@ BOOL CSensorAgentDlg::getStateProcess(CString name)
 	return FALSE;
 }
 
-
-BOOL CSensorAgentDlg::IsRunningResource()
-{
-	TCHAR strPyCmd[20];
-	ZeroMemory(strPyCmd, sizeof(strPyCmd));
-	_tcscpy(strPyCmd, _T("python.exe"));
-	return IsRunningProcess(strPyCmd, RUN_RESOURCE_PYC_NAME);
-}
-
 void CSensorAgentDlg::OnMenuTrayExit()
 {
 	EndDialog(IDOK);
@@ -1166,8 +1145,11 @@ void CSensorAgentDlg::OnMenuTrayExit()
 
 void CSensorAgentDlg::OnMenuTrayShow()
 {
-	MoveWindow(CRect(0, 0, 1100, 550), TRUE);
-	ShowWindow(SW_SHOW);
+	if (m_typeAgent == AGENT_SENSOR)
+	{
+		MoveWindow(CRect(0, 0, 1100, 550), TRUE);
+		ShowWindow(SW_SHOW);
+	}
 }
 
 void CSensorAgentDlg::OnMenuTrayHide()
