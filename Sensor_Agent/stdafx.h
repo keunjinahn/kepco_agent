@@ -71,7 +71,8 @@
 #define	WM_ICON_NOTIFY			WM_APP+10
 #define RUN_APP_NAME  _T("KCollectionServer.exe")
 #define RUN_INSTALL_NAME _T("KCollectionServer_setup.exe")
-#define RUN_RESOURCE_PYC_NAME  _T("event_manager.py")
+#define RUN_EVENT_PYC_NAME  _T("event_manager.py")
+#define RUN_RES_PYC_NAME  _T("event_manager.py")
 
 #pragma warning(disable : 4996)
 

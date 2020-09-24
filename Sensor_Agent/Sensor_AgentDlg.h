@@ -68,11 +68,11 @@ public :
 	BOOL isSetupProgramInstall();
 	float m_dwFrequencyIndex;
 	int m_nProfile;
-	void StartCollectionResourceServer();
-	BOOL IsRunningResource();
+	void StartEventManager();
 	void SetAutoStart(BOOL bStart);
 	AGENT_TYPE m_typeAgent;
 	void LoadAgentConfig();
+	void StartResManager();
 };
 
 extern CSensorAgentDlg* g_pMainDlg;

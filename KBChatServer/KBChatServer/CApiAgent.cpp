@@ -439,6 +439,7 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 			g_pApiAgentDlg->AddAPI(pData);
 		}
 	}
+	/*
 	else if (retCode == RETURN_NOT_AREA_CODE)
 	{
 		if (g_pServerDlg->m_ConfigInfo.agent_type == AGENT_RESOURCE)
@@ -467,6 +468,7 @@ void CApiAgent::parse_Check_Config(Json::Value root)
 		}
 		g_pServerDlg->m_bWasServerConnected = TRUE;
 	}
+	*/
 }
 
 
