@@ -128,7 +128,7 @@ class EventManager(object):
             # self.kepco_server_info['tbms_server_user_pass'] = 'kwkepcose[9470'
             # self.sleep_seconds = int(self.kepco_server_info['sleep_seconds']) / 1000
             #self.sleep_seconds = int(self.kepco_server_info['sleep_seconds']) / 1000
-            # self.Log(str(self.kepco_server_info))
+            self.Log(str(self.kepco_server_info))
         except:
             self.Log("get_server_info Exception")
 
@@ -387,7 +387,7 @@ class EventManager(object):
             for recv in recv_data:
                 tdis_event_list.append(recv)
         except :
-            self.Log("get_tdis_event except")
+            self.Log("get_tdis_event_change except")
         finally:
             if not cursor:
                 cursor.close()
@@ -450,41 +450,50 @@ class EventManager(object):
         return tbms_event_list
 
     def run(self):
-        try:
-            self.Log('EVENT COLLECTION START....')
-            self.get_server_info()
-            trs_event_info_list = []
-            tdis_event_info_list = []
-            tbms_event_info_list = []
-            if int(self.kepco_server_info['tdis_tbms_change']) == 1:
-                if int(self.kepco_server_info['trs_check']) == 1 :
-                    trs_event_info_list = self.get_trs_event()
-                if int(self.kepco_server_info['tdis_check']) == 1 :
-                    tdis_event_info_list = self.get_tdis_event()
-                if int(self.kepco_server_info['tbms_check']) == 1 :
-                    tdis_event_info_change = self.get_tdis_event_change()
-                    for event in tdis_event_info_change:
-                        tdis_event_info_list.append(event)
-            else :
-                if int(self.kepco_server_info['trs_check']) == 1 :
-                    trs_event_info_list = self.get_trs_event()
-                if int(self.kepco_server_info['tdis_check']) == 1 :
-                    tdis_event_info_list = self.get_tdis_event()
-                if int(self.kepco_server_info['tbms_check']) == 1 :
-                    tbms_event_info_list = self.get_tbms_event()
-            keop_event_info = {
-                "trs_event": json.dumps(trs_event_info_list),
-                "tdis_event":json.dumps(tdis_event_info_list),
-                "tbms_event":json.dumps(tbms_event_info_list)
-            }
-            dataobj = json.dumps(keop_event_info)
-            servers_url = self.get_server_ip() + "/api/v1/agent/kepco_event_send"
-            r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
-            data = json.loads(r.text)
-            self.Log(str(data))
-            self.Log('EVENT COLLECTION END....')
-        except :
-            self.Log('Exception run')
+        # try:
+        self.Log('EVENT COLLECTION START....')
+        self.get_server_info()
+        trs_event_info_list = []
+        tdis_event_info_list = []
+        tbms_event_info_list = []
+        if int(self.kepco_server_info['tdis_tbms_change']) == 1:
+            if int(self.kepco_server_info['trs_check']) == 1 :
+                trs_event_info_list = self.get_trs_event()
+                print("trs_event_info_list :",trs_event_info_list)
+            if int(self.kepco_server_info['tdis_check']) == 1 :
+                tdis_event_info_list = self.get_tdis_event()
+                print("tdis_event_info_list :", tdis_event_info_list)
+            if int(self.kepco_server_info['tbms_check']) == 1 :
+                tbms_event_info_list = self.get_tdis_event_change()
+                print("tbms_event_info_list :", tbms_event_info_list)
+        else :
+            if int(self.kepco_server_info['trs_check']) == 1 :
+                trs_event_info_list = self.get_trs_event()
+                print("trs_event_info_list :", trs_event_info_list)
+            if int(self.kepco_server_info['tdis_check']) == 1 :
+                tdis_event_info_list = self.get_tdis_event()
+                print("tdis_event_info_list :", tdis_event_info_list)
+            if int(self.kepco_server_info['tbms_check']) == 1 :
+                tbms_event_info_list = self.get_tbms_event()
+                print("tbms_event_info_list :", tbms_event_info_list)
+        print("===============>> 1")
+        keop_event_info = {
+            "trs_event": json.dumps(trs_event_info_list,ensure_ascii=False,encoding='latin1'),
+            "tdis_event":json.dumps(tdis_event_info_list,ensure_ascii=False,encoding='latin1'),
+            "tbms_event":json.dumps(tbms_event_info_list,ensure_ascii=False,encoding='latin1')
+        }
+        print("===============>> 2")
+        dataobj = json.dumps(keop_event_info,encoding='latin1')
+        print("===============>> 3")
+        servers_url = self.get_server_ip() + "/api/v1/agent/kepco_event_send"
+        print("servers_url : ", servers_url)
+        r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
+        print("r.text : ", r.text)
+        data = json.loads(r.text)
+        self.Log(str(data))
+        self.Log('EVENT COLLECTION END....')
+        # except :
+        #     self.Log('Exception run')
         # while self.is_running:
         #     try:
         #         self.Log('EVENT COLLECTION START....')

@@ -703,23 +703,26 @@ void CKBChatServerDlg::LoadConfig()
 		//strKey = _T("70.112.1.187");
 #endif
 
-	::GetPrivateProfileString(strKey, _T("locationname"), _T("UNKNOWN"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-	m_ConfigInfo.locationname.Format(_T("%s"),strValue);
-	if (m_ConfigInfo.locationname == _T("UNKNOWN"))
+	if (m_ConfigInfo.agent_type == AGENT_SENSOR)
 	{
-		AfxMessageBox(_T("미인식지역 전처리서버입니다 관리자에게 문의하여주세요!!!"));
-		EndDialog(IDOK);
+		::GetPrivateProfileString(strKey, _T("locationname"), _T("UNKNOWN"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		m_ConfigInfo.locationname.Format(_T("%s"), strValue);
+		if (m_ConfigInfo.locationname == _T("UNKNOWN"))
+		{
+			AfxMessageBox(_T("미인식지역 전처리서버입니다 관리자에게 문의하여주세요!!!"));
+			EndDialog(IDOK);
+		}
+		::GetPrivateProfileString(strKey, _T("locationcode"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		m_ConfigInfo.locationcode.Format(_T("%s"), strValue);
+
+		::GetPrivateProfileString(strKey, _T("agent_ver"), _T("1.0.0"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		m_ConfigInfo.agent_ver.Format(_T("%s"), strValue);
+		::GetPrivateProfileString(strKey, _T("update_completed"), _T("0"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		m_ConfigInfo.update_completed = _wtoi(strValue);
+
+		::GetPrivateProfileString(strKey, _T("shopcount"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
+		int nShopCount = _wtoi(strValue);
 	}
-	::GetPrivateProfileString(strKey, _T("locationcode"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-	m_ConfigInfo.locationcode.Format(_T("%s"), strValue);
-
-	::GetPrivateProfileString(strKey, _T("agent_ver"), _T("1.0.0"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-	m_ConfigInfo.agent_ver.Format(_T("%s"), strValue);
-	::GetPrivateProfileString(strKey, _T("update_completed"), _T("0"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-	m_ConfigInfo.update_completed = _wtoi(strValue);
-
-	::GetPrivateProfileString(strKey, _T("shopcount"), _T("1"), strValue.GetBuffer(256), 256, strConfig.GetBuffer(256));
-	int nShopCount = _wtoi(strValue);
 	/*
 	CString sNum;
 	CString sMac;
