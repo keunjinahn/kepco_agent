@@ -39,7 +39,7 @@ Section "전체 프로그램 설치" SEC01
   File ".\bin\Sensor_Agent.exe"
   File ".\bin\icon.ico"
   File ".\config.ini"
-  File ".\bin\config_agent.ini"
+  File ".\config_agent.ini"
   File ".\bin\uninstall.ico"
   File ".\bin\res_manager.py"
   File ".\bin\python27.dll"

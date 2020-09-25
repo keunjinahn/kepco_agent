@@ -78,7 +78,7 @@ class ResourceManager(object):
         self.sleep_seconds = 30
 
     def Log(self,msg) :
-        self.logger.info(msg)
+        # self.logger.info(msg)
         if self.log_print_enable is True :
             print(msg)
 
@@ -95,19 +95,22 @@ class ResourceManager(object):
             # self.kepco_server_info = json.loads(result)
             self.kepco_server_info = {}
             self.kepco_server_info = json.loads(result)
-            self.Log(str(self.kepco_server_info))
+            # self.Log(str(self.kepco_server_info))
         except:
             self.Log("get_server_info Exception")
 
     def _check_usage_of_cpu_and_memory(self):
-        print("cpu : ",psutil.cpu_percent())
+        time.sleep(10)
+        cpu = psutil.cpu_percent()
+        print("cpu : ",cpu)
         print("mem : ",psutil.virtual_memory())  # physical memory usage
         print('memory % used:', psutil.virtual_memory()[2])
         obj = {
-            "cpu_value":psutil.cpu_percent(),
+            "cpu_value":cpu,
             "ram_avail_value":psutil.virtual_memory()[1],
             "ram_phys_value": psutil.virtual_memory()[0]
         }
+        print("obj : ",obj)
         return obj
 
     def run(self):
@@ -117,6 +120,7 @@ class ResourceManager(object):
         obj = self._check_usage_of_cpu_and_memory()
         dataobj = json.dumps(obj)
         servers_url = self.get_server_ip() + "/api/v1/agent/kepco_resource_send"
+        print("dataobj : ", dataobj)
         r = requests.post(servers_url, verify=False, data=dataobj, headers=self.api_headers)
         data = json.loads(r.text)
         self.Log(str(data))
@@ -127,18 +131,19 @@ class ResourceManager(object):
 
 
 if __name__ == '__main__':
-    file_logger = logging.getLogger("ResourceManager")
-    file_logger.setLevel(logging.INFO)
-    file_handler = handlers.RotatingFileHandler(
-        "./ResourceManager.log",
-        maxBytes=(1024 * 1024 * 1),
-        backupCount=5
-    )
-    formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
-    file_handler.setFormatter(formatter)
-    file_logger.addHandler(file_handler)
+    # file_logger = logging.getLogger("ResourceManager")
+    # file_logger.setLevel(logging.INFO)
+    # file_handler = handlers.RotatingFileHandler(
+    #     "./ResourceManager.log",
+    #     maxBytes=(1024 * 1024 * 1),
+    #     backupCount=5
+    # )
+    # formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+    # file_handler.setFormatter(formatter)
+    # file_logger.addHandler(file_handler)
 
-    app = ResourceManager(logger=file_logger)
+    # app = ResourceManager(logger=file_logger)
+    app = ResourceManager(logger=None)
     app.run()
     app.stop_process()
 

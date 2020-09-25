@@ -401,7 +401,7 @@ class EventManager(object):
             # print("DB_INFO_MODULE :",DB_INFO_MODULE)
             info = db_info
             print("start")
-            self.cnxn = pyodbc.connect(DB_INFO_MODULE)
+            self.cnxn = pyodbc.connect(DB_INFO_MODULE,unicode_results=True)
             print("connected...")
             cursor = self.cnxn.cursor()
             self.Log('Database connected.')

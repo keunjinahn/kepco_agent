@@ -41,7 +41,7 @@ Section "전체 프로그램 설치" SEC01
   File ".\bin\libmariadb.dll"
   File ".\bin\icon.ico"
   File ".\config.ini"
-  File ".\bin\config_agent.ini"
+  File ".\config_agent.ini"
   File ".\bin\uninstall.ico"
   File ".\bin\event_manager.py"
   File ".\bin\event_manager.pyc"

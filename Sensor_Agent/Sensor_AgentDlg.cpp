@@ -370,9 +370,9 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		KillTimer(TIMER_START_RES_MANAGER);
 
-		StartEventManager();
+		StartResManager();
 
-		SetTimer(TIMER_START_RES_MANAGER, 30000, NULL);
+		SetTimer(TIMER_START_RES_MANAGER, 10000, NULL);
 	}
 	else if (nIDEvent == TIMER_SEND_INTERVAL)
 	{
