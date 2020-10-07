@@ -121,6 +121,7 @@ public:
 		humi_4_state = 0;
 
 		dwCount = 0;
+		sensor_date = "";
 	};
 	void setData(CString _mac, char* _device_no, char* _sensor_state, char _leak_1_value, char _leak_2_value,
 		char* _temp_1_value, char* _temp_2_value, char* _temp_3_value, char* _temp_4_value,
@@ -234,6 +235,7 @@ public:
 		CString sValue;
 		sValue.Format(_T("%c"), pPkt->leak_1_value);
 		leak_1_value = _wtoi(sValue);
+		//leak_1_value = 1;
 		sValue.Format(_T("%c"), pPkt->leak_2_value);
 		leak_2_value = _wtoi(sValue);
 
@@ -378,6 +380,7 @@ public:
 	CString mac;
 	BYTE ack='-';
 	BYTE etx='9';
+	CString sensor_date;
 };
 
 class CShopInfo

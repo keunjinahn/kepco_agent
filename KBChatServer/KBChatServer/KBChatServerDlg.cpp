@@ -21,6 +21,7 @@ CRect g_rectSensorInfoArea = CRect(242, 155, 1213, 799);
 #define TIMER_CHECK_CONFIG 2002
 #define TIMER_INCIDENT 2003
 #define TIMER_RESOURCE 2004
+#define TIMER_RESTART 2005
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
 
@@ -178,6 +179,7 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
 	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
 	SetTimer(TIMER_INCIDENT, 1000, NULL);
+	SetTimer(TIMER_RESTART, 1000 * 60 * 60,NULL);
 	
 	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));  // Icon to use
 	if (!m_TrayIcon.Create(
@@ -325,9 +327,9 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 	}
 
 	CString strQuery = _T("");
-	strQuery.Format(_T("insert into tb_collection_hist(device_no, sensor_state,leak_1_value,leak_2_value,temp_1_value,temp_2_value,temp_3_value,temp_4_value \
-		,humi_1_value, humi_2_value, humi_3_value, humi_4_value) values('%d', '%d', '%d', '%d', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f')")
-		, pObj->device_no, pObj->sensor_state, pObj->leak_1_value, pObj->leak_2_value, pObj->temp_1_value, pObj->temp_2_value, pObj->temp_3_value, pObj->temp_4_value
+	strQuery.Format(_T("insert into tb_collection_hist(mac,device_no, sensor_state,leak_1_value,leak_2_value,temp_1_value,temp_2_value,temp_3_value,temp_4_value \
+		,humi_1_value, humi_2_value, humi_3_value, humi_4_value) values('%s','%d', '%d', '%d', '%d', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f')")
+		, pObj->mac, pObj->device_no, pObj->sensor_state, pObj->leak_1_value, pObj->leak_2_value, pObj->temp_1_value, pObj->temp_2_value, pObj->temp_3_value, pObj->temp_4_value
 		, pObj->humi_1_value, pObj->humi_2_value, pObj->humi_3_value, pObj->humi_4_value);
 
 	if (mysql_query(&m_Mysql, W2A(strQuery))) {
@@ -339,7 +341,10 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 	mysql_close(&m_Mysql);
 
 
-	CShopInfo* pShopInfo = GetShopInfo(pObj->mac);
+	CString sMac = _T("");
+	sMac.Format(_T("%s"), pObj->mac);
+
+	CShopInfo* pShopInfo = GetShopInfo(sMac);
 
 	if (pShopInfo == NULL)
 	{
@@ -423,7 +428,10 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		|| pObj->humi_4_value < pShopInfo->m_objData.humi_4_value_min)
 		pShopInfo->m_objData.humi_4_value_min = pObj->humi_4_value;
 
-
+	SYSTEMTIME current_time;
+	GetLocalTime(&current_time);
+	pShopInfo->m_objData.sensor_date.Format(_T("%.4ld/%.2ld/%.2ld %.2ld:%.2ld:%.2ld"), current_time.wYear, current_time.wMonth, current_time.wDay,
+		current_time.wHour, current_time.wMinute, current_time.wSecond);
 
 	CTime t = CTime::GetCurrentTime();
 	CString sTime = _T("");
@@ -447,9 +455,15 @@ CShopInfo* CKBChatServerDlg::GetShopInfo(CString srcMac)
 	while (pos)
 	{
 		CShopInfo* pShopInfo = (CShopInfo*)m_ConfigInfo.m_pShowList->GetNext(pos);
+		
 		CString destMac;
 		destMac.Format(_T("%s"), pShopInfo->m_objData.mac);
-		if (destMac == srcMac)
+		/*
+		CString strMsg;
+		strMsg.Format(_T("destMac mac : %s,src mac : %s",), destMac.TrimLeft(), srcMac.TrimLeft());
+		theApp.AppLog.Write(_T("%s"), strMsg);
+		*/
+		if (destMac.TrimLeft() == srcMac.TrimLeft())
 			return pShopInfo;
 	}
 	return NULL;
@@ -789,6 +803,8 @@ void CKBChatServerDlg::SendSensorData()
 			&& dwTic < 1000 * 10) //센서데이터에 값이 들어 있으면 보냄 , 10초동안 값이 안들어오면 보내지않음
 		{
 			mac.Format(_T("%s"), pShopInfo->m_objData.mac);
+
+
 			strMerge += mac + _T(",");
 			device_no.Format(_T("%d"), pShopInfo->m_objData.device_no);
 			strMerge += device_no + _T(",");
@@ -814,7 +830,6 @@ void CKBChatServerDlg::SendSensorData()
 			strMerge += humi_4_value + _T(",");
 			if(i != m_ConfigInfo.m_pShowList->GetCount()-1)
 				strMerge += _T("|");
-			
 			/*
 			sCmd.Format(_T("%d"), API_SENSOR_DATA);
 			APICALLDATA* pData = new APICALLDATA;
@@ -933,7 +948,7 @@ void CKBChatServerDlg::CheckIncident()
 			strValue.Format(_T("%.1f"), pShopInfo->m_objData.temp_4_value);
 			valueList.AddTail(strValue);
 			CHECKRESULT _checkResult_2 = CheckIncidentDevice(&valueList, SENSOR_TEMP, &resultValue);
-			if (_checkResult_2 != CHECK_NORMAL)
+			if (_checkResult_2 != CHECK_NORMAL && _checkResult_1 != CHECK_ERROR)
 			{
 				APICALLDATA* pData = new APICALLDATA;
 				pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
@@ -959,7 +974,7 @@ void CKBChatServerDlg::CheckIncident()
 			strValue.Format(_T("%f"), pShopInfo->m_objData.humi_4_value);
 			valueList.AddTail(strValue);
 			CHECKRESULT _checkResult_3 = CheckIncidentDevice(&valueList, SENSOR_HUMI, &resultValue);
-			if (_checkResult_3 != CHECK_NORMAL)
+			if (_checkResult_3 != CHECK_NORMAL && _checkResult_1 != CHECK_ERROR && _checkResult_2 != CHECK_ERROR)
 			{
 				APICALLDATA* pData = new APICALLDATA;
 				pData->insert(APICALLDATA::value_type(KEY_CMD, sCmd));
@@ -1041,14 +1056,7 @@ CHECKRESULT CKBChatServerDlg::CheckIncidentDevice(CStringList *pValueList, SENSO
 		{
 			nValue = _wtof(pValueList->GetAt(pValueList->FindIndex(i)));
 			if (g_pServerDlg->m_ConfigInfo.leak_R01_enable
-				&& nValue >= g_pServerDlg->m_ConfigInfo.leak_R01_warning
-				&& nValue < g_pServerDlg->m_ConfigInfo.leak_R01_error)
-			{
-				bWarring = TRUE;
-				(*returValue) = nValue;
-			}
-			if (g_pServerDlg->m_ConfigInfo.leak_R01_enable
-				&& nValue >= g_pServerDlg->m_ConfigInfo.leak_R01_warning)
+				&& nValue == 1)
 			{
 				bError = TRUE;
 				(*returValue) = nValue;
@@ -1419,6 +1427,10 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 		CheckResource();
 		SetTimer(TIMER_RESOURCE, m_ConfigInfo.data_upload_second, NULL);
 		*/
+	}
+	else if (nIDEvent == TIMER_RESTART)
+	{
+		exit(0);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
