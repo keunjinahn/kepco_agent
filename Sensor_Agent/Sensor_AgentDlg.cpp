@@ -355,7 +355,7 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			return;
 		}
-		StartCollectionServer();
+		//StartCollectionServer();
 		SetTimer(TIMER_KCOLLECTION_CHECK,2000,NULL);
 	}
 	else if (nIDEvent == TIMER_START_EVENT_MANAGER)

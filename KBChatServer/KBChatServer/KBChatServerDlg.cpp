@@ -326,11 +326,18 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		mysql_query(&m_Mysql, "set names euckr"); // ÇÑ±Û ±úÁü º¸¿Ï
 	}
 
+
+	SYSTEMTIME current_time;
+	GetLocalTime(&current_time);
+	CString sensor_date = _T("");
+	sensor_date.Format(_T("%.4ld/%.2ld/%.2ld %.2ld:%.2ld:%.2ld"), current_time.wYear, current_time.wMonth, current_time.wDay,
+		current_time.wHour, current_time.wMinute, current_time.wSecond);
+
 	CString strQuery = _T("");
 	strQuery.Format(_T("insert into tb_collection_hist(mac,device_no, sensor_state,leak_1_value,leak_2_value,temp_1_value,temp_2_value,temp_3_value,temp_4_value \
-		,humi_1_value, humi_2_value, humi_3_value, humi_4_value) values('%s','%d', '%d', '%d', '%d', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f')")
+		,humi_1_value, humi_2_value, humi_3_value, humi_4_value,sensor_date) values('%s','%d', '%d', '%d', '%d', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f', '%.1f','%s')")
 		, pObj->mac, pObj->device_no, pObj->sensor_state, pObj->leak_1_value, pObj->leak_2_value, pObj->temp_1_value, pObj->temp_2_value, pObj->temp_3_value, pObj->temp_4_value
-		, pObj->humi_1_value, pObj->humi_2_value, pObj->humi_3_value, pObj->humi_4_value);
+		, pObj->humi_1_value, pObj->humi_2_value, pObj->humi_3_value, pObj->humi_4_value, sensor_date);
 
 	if (mysql_query(&m_Mysql, W2A(strQuery))) {
 		return;
@@ -428,10 +435,7 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 		|| pObj->humi_4_value < pShopInfo->m_objData.humi_4_value_min)
 		pShopInfo->m_objData.humi_4_value_min = pObj->humi_4_value;
 
-	SYSTEMTIME current_time;
-	GetLocalTime(&current_time);
-	pShopInfo->m_objData.sensor_date.Format(_T("%.4ld/%.2ld/%.2ld %.2ld:%.2ld:%.2ld"), current_time.wYear, current_time.wMonth, current_time.wDay,
-		current_time.wHour, current_time.wMinute, current_time.wSecond);
+	pShopInfo->m_objData.sensor_date.Format(_T("%s"), sensor_date);
 
 	CTime t = CTime::GetCurrentTime();
 	CString sTime = _T("");
