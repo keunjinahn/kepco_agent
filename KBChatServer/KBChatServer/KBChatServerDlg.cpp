@@ -828,6 +828,7 @@ void CKBChatServerDlg::SendSensorData()
 			strMerge += humi_3_value + _T(",");
 			humi_4_value.Format(_T("%.1f"), pShopInfo->m_objData.humi_4_value);
 			strMerge += humi_4_value + _T(",");
+			strMerge += pShopInfo->m_objData.sensor_date + _T(",");
 			if(i != m_ConfigInfo.m_pShowList->GetCount()-1)
 				strMerge += _T("|");
 			/*
