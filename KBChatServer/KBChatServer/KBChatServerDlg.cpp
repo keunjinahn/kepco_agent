@@ -179,7 +179,7 @@ BOOL CKBChatServerDlg::OnInitDialog()
 	SetTimer(TIMER_SENSOR_DATA_SEND, m_ConfigInfo.data_upload_second, NULL);
 	SetTimer(TIMER_CHECK_CONFIG, 1000, NULL);
 	SetTimer(TIMER_INCIDENT, 1000, NULL);
-	SetTimer(TIMER_RESTART, 1000 * 60 * 60,NULL);
+	SetTimer(TIMER_RESTART, 1000 * 60 * 60 * 6,NULL);
 	
 	HICON hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON2));  // Icon to use
 	if (!m_TrayIcon.Create(
@@ -1435,7 +1435,7 @@ void CKBChatServerDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == TIMER_RESTART)
 	{
-		exit(0);
+		EndDialog(IDOK);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
