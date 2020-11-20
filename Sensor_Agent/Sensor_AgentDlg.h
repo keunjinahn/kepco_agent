@@ -73,6 +73,8 @@ public :
 	AGENT_TYPE m_typeAgent;
 	void LoadAgentConfig();
 	void StartResManager();
+	DWORD m_dwServiceCheckCount;
+	void RestartMySQLService();
 };
 
 extern CSensorAgentDlg* g_pMainDlg;

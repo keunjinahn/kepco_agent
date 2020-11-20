@@ -70,6 +70,7 @@ CSensorAgentDlg::CSensorAgentDlg(CWnd* pParent /*=nullptr*/)
 	m_dwFrequencyIndex = 0.0;
 	m_nProfile = 0;
 	m_typeAgent = AGENT_SENSOR;
+	m_dwServiceCheckCount = 1;
 }
 
 void CSensorAgentDlg::DoDataExchange(CDataExchange* pDX)
@@ -350,12 +351,20 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == TIMER_KCOLLECTION_CHECK)
 	{
 		KillTimer(TIMER_KCOLLECTION_CHECK);
-
+		//if (m_dwServiceCheckCount == 302400)
+		if(m_dwServiceCheckCount == 30)
+		{
+			RestartMySQLService();
+			m_dwServiceCheckCount = 0;
+		}
+		m_dwServiceCheckCount++;
 		if (isSetupProgramInstall())
 		{
 			return;
 		}
 		StartCollectionServer();
+
+
 		SetTimer(TIMER_KCOLLECTION_CHECK,2000,NULL);
 	}
 	else if (nIDEvent == TIMER_START_EVENT_MANAGER)
@@ -1145,11 +1154,28 @@ void CSensorAgentDlg::OnMenuTrayExit()
 
 void CSensorAgentDlg::OnMenuTrayShow()
 {
+
+	STARTUPINFO si = { };
+	si.cb = sizeof(STARTUPINFO);
+	GetStartupInfo(&si);
+
+	PROCESS_INFORMATION pi = { };
+
+	// is modified by the call to CreateProcess (unicode version).
+	TCHAR szCmdLine[] = _T("cmd.exe /C \"net stop MySQL & net start MySQL\"");
+
+	// send shell command to restart our service.
+	if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+	{
+		// do some error reporting...
+	}
+	/*
 	if (m_typeAgent == AGENT_SENSOR)
 	{
 		MoveWindow(CRect(0, 0, 1100, 550), TRUE);
 		ShowWindow(SW_SHOW);
 	}
+	*/
 }
 
 void CSensorAgentDlg::OnMenuTrayHide()
@@ -1215,4 +1241,22 @@ void CSensorAgentDlg::SetAutoStart(BOOL bStart)
 	}
 
 	RegCloseKey(hKey);
+}
+
+void CSensorAgentDlg::RestartMySQLService()
+{
+	STARTUPINFO si = { };
+	si.cb = sizeof(STARTUPINFO);
+	GetStartupInfo(&si);
+
+	PROCESS_INFORMATION pi = { };
+
+	// is modified by the call to CreateProcess (unicode version).
+	TCHAR szCmdLine[] = _T("cmd.exe /C \"net stop MySQL & net start MySQL\"");
+
+	// send shell command to restart our service.
+	if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+	{
+		// do some error reporting...
+	}
 }
