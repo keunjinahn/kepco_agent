@@ -82,6 +82,7 @@ public:
 	void Init_Cpu();
 	double getCpuCurrentValue();
 	void getRAMStatus(int& availableMem, int& physicalMem);
+	void init_localdb();
 };
 
 extern CKBChatServerDlg *g_pServerDlg;

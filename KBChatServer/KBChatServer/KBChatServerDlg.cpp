@@ -197,6 +197,9 @@ BOOL CKBChatServerDlg::OnInitDialog()
 		return FALSE;
 	}
 	m_TrayIcon.SetMenuDefaultItem(0, TRUE);
+
+	init_localdb();
+
 	SetWindowText(_T("KConnectionServer"));
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -308,7 +311,7 @@ BOOL CKBChatServerDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
-void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
+void CKBChatServerDlg::init_localdb()
 {
 	USES_CONVERSION;
 
@@ -325,7 +328,27 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 	else {
 		mysql_query(&m_Mysql, "set names euckr"); // 한글 깨짐 보완
 	}
+}
 
+void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
+{
+	USES_CONVERSION;
+
+	/*
+	char* host = "127.0.0.1";
+	char* userId = "dbadmin";
+	char* passwd = "kepco12!@";
+	char* dbName = "kcollectiondb";
+	int port = 3306;
+	mysql_init(&m_Mysql);
+	if (mysql_real_connect(&m_Mysql, host, userId, passwd, dbName, port, NULL, 0) == NULL)
+	{
+		return;
+	}
+	else {
+		mysql_query(&m_Mysql, "set names euckr"); // 한글 깨짐 보완
+	}
+	*/
 
 	SYSTEMTIME current_time;
 	GetLocalTime(&current_time);
@@ -345,7 +368,6 @@ void CKBChatServerDlg::SensorDataInsert(KBPKT_DATA_OBJ *pObj)
 
 	int check = _CrtDumpMemoryLeaks();
 
-	mysql_close(&m_Mysql);
 
 
 	CString sMac = _T("");
@@ -514,6 +536,9 @@ void CKBChatServerDlg::OnDestroy()
 {
 	CDialogEx::OnDestroy();
 	
+
+	mysql_close(&m_Mysql);
+
 	g_MsgrSvr.Stop();
 	WSACleanup();
 

@@ -351,8 +351,8 @@ void CSensorAgentDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == TIMER_KCOLLECTION_CHECK)
 	{
 		KillTimer(TIMER_KCOLLECTION_CHECK);
-		//if (m_dwServiceCheckCount == 302400)
-		if(m_dwServiceCheckCount == 30)
+		if (m_dwServiceCheckCount == 43200 * 5)
+		//f(m_dwServiceCheckCount == 30)
 		{
 			RestartMySQLService();
 			m_dwServiceCheckCount = 0;
